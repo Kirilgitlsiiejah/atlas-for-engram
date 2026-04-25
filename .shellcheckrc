@@ -7,7 +7,6 @@
 # directives in every consumer script.
 disable=SC1091
 
-# install.sh is a one-shot bootstrap that runs outside the plugin tree and
-# intentionally uses patterns (heredocs into ~/.claude, env-driven paths) that
-# are noisy under lint. Excluded by path so the rest of the tree stays strict.
-ignore_paths=install.sh
+# Note: per-path exclusions (e.g. install.sh) live in `.github/workflows/ci.yml`
+# under `ludeeus/action-shellcheck`'s `ignore_names`, since `.shellcheckrc` does
+# not support a global ignore-paths directive.
