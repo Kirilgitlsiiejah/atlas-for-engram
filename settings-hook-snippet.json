@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__plugin_engram_engram__mem_search",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/skills/compare-with-atlas/hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
