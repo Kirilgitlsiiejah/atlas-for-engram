@@ -105,14 +105,11 @@ Project resolution: same algorithm as engram core, git remote, then git root bas
 | `MOVE_RAW_AFTER_INJECT` | `false` | move .md to `atlas-pool/injected/` after inject |
 | `ATLAS_EDIT_CONFIRM_TYPE_CHANGE` | `false` | required `=yes` to change type of an atlas obs |
 
-## Testing pedigree
+## Relationship to engram
 
-This plugin survived a parallel adversarial review (judgment-day): 2 blind judges, 2 rounds, 21 confirmed fixes applied, 0 CRITICAL remaining. Independently re-verified end-to-end (sdd-verify): 8/8 requirements PASS. See commit history for fix details.
+This is a **third-party community plugin** for [engram](https://github.com/Gentleman-Programming/engram). It integrates with engram's HTTP API and follows engram's claude-code plugin conventions (bash + curl + jq, defensive style, exit 0 always), but it is **not officially affiliated with, endorsed by, or maintained by the engram project**.
 
-## Credits
-
-- [engram](https://github.com/Gentleman-Programming/engram) by Gentleman-Programming
-- Patterns aligned with engram's `claude-code` plugin (bash + curl + jq, defensive style, exit 0 always)
+This plugin is independently maintained. Bugs, feature requests, and PRs go here, not to the engram repository.
 
 ## License
 
