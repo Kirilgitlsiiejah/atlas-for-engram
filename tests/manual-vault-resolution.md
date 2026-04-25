@@ -4,6 +4,8 @@ Cubre los 5 niveles de la cascada `detect_vault` + el walk-up con cada marker
 (`.obsidian/` y `.atlas-pool`). Pensado para ejecutarse a mano antes de
 mergear cambios al helper `_helpers.sh` o a sus consumers.
 
+**Última ejecución verde**: 2026-04-25 (initial cascade implementation, los 6 escenarios PASS).
+
 > Setup: cada escenario crea sus fixtures temporales en `/tmp/atlas-smoke/`
 > y los limpia al final. Asume Git Bash en Windows o bash en macOS/Linux.
 

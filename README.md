@@ -103,7 +103,7 @@ claude plugin install atlas@atlas-for-engram
 Browser Web Clipper
         |
         v
-   ${VAULT_ROOT}/atlas-pool/<slug>.md  (raw markdown, no project)
+   ${ATLAS_VAULT}/atlas-pool/<slug>.md  (raw markdown, no project)
         |  inject-atlas (manual trigger)
         v
    engram type=atlas, project=<auto-detected from git>
@@ -157,7 +157,7 @@ Every session and every `/clear` runs `scripts/_doctor.sh` with a 3s timeout. Fo
 
 1. **engram reachable** -- `GET http://${ENGRAM_HOST}/health` with 1s timeout
 2. **deps present** -- `jq`, `curl`, `rg`, `fd` on PATH
-3. **vault layout** -- `${VAULT_ROOT:-$HOME/vault}/atlas-pool/` exists
+3. **vault layout** -- `<resolved-vault>/atlas-pool/` exists (resolved via the [vault cascade](#vault-resolution))
 4. **no legacy hook** -- `~/.claude/settings.json` does NOT contain a PostToolUse hook for `compare-with-atlas` (would double-fire alongside the native plugin)
 
 Exit codes: `0` always (never blocks session start). Stdout empty → silent OK. Stdout JSON → warnings surfaced as `additionalContext` for the agent.
@@ -182,7 +182,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/_doctor.sh
 
 ### Vault-agnostic ingestion
 
-Built for Obsidian Web Clipper but the parser only assumes a markdown file with a YAML frontmatter and a body. Any tool that drops `.md` into `${VAULT_ROOT}/atlas-pool/` works (Logseq, Foam, Zettlr, raw curl). The injection skill auto-detects the engram project from your current git repo, so the same clip can land in different projects depending on where you trigger it from.
+Built for Obsidian Web Clipper but the parser only assumes a markdown file with a YAML frontmatter and a body. Any tool that drops `.md` into `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` works (Logseq, Foam, Zettlr, raw curl). The injection skill auto-detects the engram project from your current git repo, so the same clip can land in different projects depending on where you trigger it from.
 
 ---
 
@@ -262,7 +262,7 @@ Cuando el doctor cae a L5 y el path no existe, agrega una pista de remediación:
 
 **missing commands**: install whichever the doctor flagged. On Windows Git Bash use scoop / chocolatey. On macOS `brew install jq curl ripgrep fd`. On Linux use your package manager -- the names are usually `jq curl ripgrep fd-find`.
 
-**atlas-pool not found**: create it (`mkdir -p $HOME/vault/atlas-pool`) and point your Web Clipper output there. Override the parent with `VAULT_ROOT=/path/to/vault`.
+**atlas-pool not found**: create it (`mkdir -p $HOME/vault/atlas-pool`) and point your Web Clipper output there. Override the parent with `ATLAS_VAULT=/path/to/vault` (or set up walk-up by placing a `.atlas-pool` empty file at the vault root — see [Vault Resolution](#vault-resolution)).
 
 **legacy hook detected (double-fire)**: you installed via `bash install.sh` previously and switched to the native plugin. Open `~/.claude/settings.json`, remove the `PostToolUse` entry whose `command` matches `.claude/skills/compare-with-atlas`, save. The native plugin's `hooks/hooks.json` covers it.
 
