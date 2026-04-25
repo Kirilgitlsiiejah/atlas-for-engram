@@ -16,7 +16,7 @@ Usuario invoca skill →  mem_save(type=atlas, project=<X>)   (clasificado)
 
 El archivo crudo es la fuente de verdad reproducible. La entrada en engram es el índice consultable por proyecto.
 
-**Dependencia**: este skill llama al script `~/.claude/skills/atlas-index/generate.sh` al final de cada inyección exitosa para mantener Atlas-Index.md sincronizado. Si el script no existe o falla, la inyección a engram NO se cancela — solo se emite warning.
+**Dependencia**: este skill llama al script `${CLAUDE_PLUGIN_ROOT}/skills/atlas-index/generate.sh` al final de cada inyección exitosa para mantener Atlas-Index.md sincronizado. Si el script no existe o falla, la inyección a engram NO se cancela — solo se emite warning.
 
 ## Cuándo activarse
 
@@ -267,7 +267,7 @@ Si la elección es "Ask-each-time", preguntar después de cada inyección.
 
 Después de confirmar la inyección al usuario, invocar atomicamente el script de atlas-index:
 
-    bash '$HOME/.claude/skills/atlas-index/generate.sh' <proyecto>
+    bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-index/generate.sh' <proyecto>
 
 Donde `<proyecto>` es el mismo proyecto al que se inyectó (paso 6).
 
