@@ -28,12 +28,21 @@
 # Exit code: always 0 (errors signaled via JSON on stderr).
 
 # Parse --vault flag (filtered out of $@ before MODE / IDs).
+# Validate the flag value defensively: missing/empty/flag-looking values are
+# rejected with a JSON error (avoids consuming the next positional silently —
+# e.g. `delete.sh --vault --preview` would otherwise treat `--preview` as the
+# path and lose the mode arg).
 VAULT_OVERRIDE=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)   VAULT_OVERRIDE="${2:-}"; shift 2 ;;
     --vault=*) VAULT_OVERRIDE="${1#--vault=}"; shift ;;
+    --vault)
+      if [[ $# -lt 2 || -z "${2:-}" || "${2:-}" == --* ]]; then
+        printf '%s\n' '{"success":false,"error":"--vault requires a path argument"}'
+        exit 0
+      fi
+      VAULT_OVERRIDE="$2"; shift 2 ;;
     *)         ARGS+=("$1"); shift ;;
   esac
 done
@@ -66,24 +75,47 @@ else
     local explicit="${1:-}"
     if [[ -n "$explicit" ]]; then printf '%s' "$explicit"; else detect_project; fi
   }
+  # Minimal inline path normalize (F2) — drift prevention vs canonical helper.
+  _atlas_normalize_path() {
+    local p="${1:-}"
+    [[ -z "$p" ]] && { printf '%s' ""; return 0; }
+    p="${p//\\//}"
+    if [[ "$p" =~ ^([A-Za-z]):/(.*)$ ]]; then
+      p="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}"
+    elif [[ "$p" =~ ^([A-Za-z]):$ ]]; then
+      p="/${BASH_REMATCH[1],,}"
+    fi
+    if [[ ${#p} -gt 1 && "$p" == */ && "$p" != "//"*/* ]]; then
+      p="${p%/}"
+    fi
+    printf '%s' "$p"
+  }
+  _atlas_warn_legacy() {
+    if [[ -n "${_ATLAS_VAULT_ROOT_WARNED:-}" ]]; then return 0; fi
+    local flag="${TMPDIR:-/tmp}/_atlas_vault_root_warned.${USER:-anon}.flag"
+    if [[ -e "$flag" ]]; then export _ATLAS_VAULT_ROOT_WARNED=1; return 0; fi
+    printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2
+    export _ATLAS_VAULT_ROOT_WARNED=1
+    : > "$flag" 2>/dev/null || true
+  }
   detect_vault() {
     local override="${1:-}" v="" lvl=""
-    if [[ -n "$override" ]]; then v="$override"; lvl=1
-    elif [[ -n "${ATLAS_VAULT:-}" ]]; then v="$ATLAS_VAULT"; lvl=2
+    if [[ -n "$override" ]]; then v=$(_atlas_normalize_path "$override"); lvl=1
+    elif [[ -n "${ATLAS_VAULT:-}" ]]; then v=$(_atlas_normalize_path "$ATLAS_VAULT"); lvl=2
     elif [[ -n "${VAULT_ROOT:-}" ]]; then
-      [[ -z "${_ATLAS_VAULT_ROOT_WARNED:-}" ]] && \
-        printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2 && \
-        export _ATLAS_VAULT_ROOT_WARNED=1
-      v="$VAULT_ROOT"; lvl=3
+      _atlas_warn_legacy
+      v=$(_atlas_normalize_path "$VAULT_ROOT"); lvl=3
     else
-      local d="$PWD" i=0
+      local d
+      d=$(_atlas_normalize_path "$PWD")
+      local i=0
       while [[ $i -lt 64 ]]; do
         if [[ -d "$d/.obsidian" ]] || [[ -f "$d/.atlas-pool" ]]; then v="$d"; lvl=4; break; fi
         [[ "$d" == "/" || "$d" =~ ^/[a-zA-Z]$ || "$d" =~ ^[A-Za-z]:/?$ ]] && break
         local p; p=$(dirname "$d" 2>/dev/null); [[ -z "$p" || "$p" == "$d" ]] && break
         d="$p"; i=$((i+1))
       done
-      [[ -z "$v" ]] && { v="${HOME}/vault"; lvl=5; }
+      [[ -z "$v" ]] && { v=$(_atlas_normalize_path "${HOME}/vault"); lvl=5; }
     fi
     export ATLAS_VAULT_RESOLVED="$v" ATLAS_VAULT_RESOLVED_LEVEL="$lvl"
     printf '%s' "$v"
