@@ -1,28 +1,55 @@
-# atlas-for-engram
+<div align="center">
 
-Plug-and-play CRUD ecosystem for the **atlas knowledge layer** in [engram](https://github.com/Gentleman-Programming/engram). Lets you ingest, edit, delete, lookup, browse, and integrity-check `type=atlas` observations sourced from any markdown vault (built for Obsidian Web Clipper but vault-agnostic).
+<img src="./assets/atlas-hero.png" alt="atlas-for-engram" width="320" />
 
-## Why
+<h1>atlas-for-engram</h1>
 
-Engram has no native ingestion path for external knowledge clips (web articles, papers). This plugin fills that gap with 7 skills + 2 hooks that orchestrate the full lifecycle around a per-vault `atlas-pool/` directory:
+<p><strong>Atlas-pool injection + retrieval skills for engram. Bridges Obsidian Web Clipper raw clips to project-scoped engram memory.</strong></p>
 
-- **Ingestion**: Web Clipper drops markdown into your vault, then `inject-atlas` parses + saves to engram
-- **Discoverability**: Auto-trigger PostToolUse hook on every `mem_search` separates own_work vs atlas results
-- **CRUD**: Edit, delete, lookup, integrity-check
-- **Browse**: Generates a navigable `Atlas-Index.md` in your vault root
-- **Self-check**: SessionStart doctor surfaces missing deps, engram down, legacy hook conflicts
+<p>
+<a href="https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases"><img src="https://img.shields.io/github/v/release/Kirilgitlsiiejah/atlas-for-engram" alt="Release"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+<img src="https://img.shields.io/badge/bash-curl%20%7C%20jq%20%7C%20rg%20%7C%20fd-4EAA25?logo=gnubash&logoColor=white" alt="Bash + curl + jq + rg + fd">
+<img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platform">
+</p>
 
-Cross-OS (Windows Git Bash, macOS, Linux). Stack: bash + curl + jq + rg + fd. Same dependencies as the engram claude-code plugin.
+</div>
 
-## Install (recommended — native plugin)
+---
+
+## What It Does
+
+This is NOT another AI tool installer. This is a **knowledge ingestion bridge** -- it takes the raw markdown clips your browser dumps into your vault and turns them into project-scoped, searchable engram observations with full CRUD, integrity checks, and an auto-generated browse index.
+
+**Before**: "I clipped 200 articles to Obsidian, now they're rotting in a folder I never open."
+
+**After**: Every clip is a `type=atlas` observation, indexed by project, separated from your own work in every `mem_search`, browsable from a generated `Atlas-Index.md`, and editable / deletable / lookup-able with a single skill invocation.
+
+### 7 skills + 2 hooks
+
+| Skill | Trigger | Purpose |
+|---|---|---|
+| `inject-atlas` | "inyectá al proyecto X la info de Y" | **CREATE** -- parse atlas-pool .md and save to engram as `type=atlas` |
+| `atlas-edit` | "editá el atlas X" | **UPDATE** -- PATCH `/observations/{id}` with field=value pairs |
+| `atlas-delete` | "borrá el atlas X" | **DELETE** -- individual + bulk + optional raw .md cleanup |
+| `atlas-lookup` | "tengo atlas de URL X?" | **READ** -- cross-project URL search |
+| `atlas-cleanup` | "atlas integrity check" | **INTEGRITY** -- orphans / dangling / duplicates / malformed report |
+| `atlas-index` | "atlas index" | **BROWSE** -- regenerates `Atlas-Index.md` in vault root |
+| `compare-with-atlas` | auto via PostToolUse hook | **READ** -- separates own_work vs atlas results in every `mem_search` |
+
+> **Note**: This is a community / companion plugin for [engram](https://github.com/Gentleman-Programming/engram). It integrates with engram's HTTP API and follows engram's claude-code plugin conventions, but it is **not officially affiliated with, endorsed by, or maintained by the engram project**.
+
+---
+
+## Quick Start
+
+### One-liner (recommended)
 
 ```bash
 claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram && claude plugin install atlas@atlas-for-engram
 ```
 
-> **Note**: Two-step install is also supported if you prefer to inspect the marketplace before installing — see [Two-step install](#two-step-install) below.
-
-The marketplace points at this repo's `.claude-plugin/marketplace.json`. Once installed, Claude Code resolves all skills, hooks, and scripts from `${CLAUDE_PLUGIN_ROOT}` automatically — no manual file copies, no settings.json edits.
+The marketplace points at this repo's `.claude-plugin/marketplace.json`. Once installed, Claude Code resolves all skills, hooks, and scripts from `${CLAUDE_PLUGIN_ROOT}` automatically -- no manual file copies, no `settings.json` edits.
 
 To update later:
 
@@ -30,7 +57,32 @@ To update later:
 claude plugin update atlas@atlas-for-engram
 ```
 
-### Two-step install
+### After install: minimal setup
+
+Once the plugin is installed, the SessionStart doctor runs on every session and tells you what's missing. Typical first-time setup:
+
+| Step | What it does | When to re-run |
+|---|---|---|
+| `mkdir -p $HOME/vault/atlas-pool` | Creates the pool directory the doctor expects | First time on a new machine |
+| Configure Web Clipper output to `atlas-pool/` | Routes browser clips to the pool | Once per browser |
+| Run `/inject-atlas` on a clip | First end-to-end ingestion | Whenever you want to inject a new clip |
+
+The doctor surfaces missing deps, an unreachable engram, or a missing `atlas-pool/` automatically -- you don't need to remember any of this.
+
+---
+
+## Install
+
+### Recommended
+
+```bash
+claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram && claude plugin install atlas@atlas-for-engram
+```
+
+<details>
+<summary><strong>Other install methods</strong> (two-step inspect, legacy manual)</summary>
+
+#### Two-step install
 
 If you want to inspect the marketplace before installing the plugin (security audit, version check, etc.):
 
@@ -40,9 +92,9 @@ claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram
 claude plugin install atlas@atlas-for-engram
 ```
 
-## Install (legacy / manual)
+#### Legacy manual install
 
-> **DEPRECATED — removed in v0.2.0.** Kept temporarily for users on older Claude Code versions without native plugin support. New users should always use the native install above.
+> **DEPRECATED -- removed in v0.2.0.** Kept temporarily for users on older Claude Code versions without native plugin support. New users should always use the native install above.
 
 ```bash
 git clone https://github.com/Kirilgitlsiiejah/atlas-for-engram.git
@@ -50,19 +102,11 @@ cd atlas-for-engram
 bash install.sh
 ```
 
-The legacy installer copies skills to `$HOME/.claude/skills/` and prints a hook snippet for `$HOME/.claude/settings.json`. If you used this path before, **remove the legacy hook** from `~/.claude/settings.json` after switching to the native plugin — otherwise the PostToolUse fires twice.
+The legacy installer copies skills to `$HOME/.claude/skills/` and prints a hook snippet for `$HOME/.claude/settings.json`. If you used this path before, **remove the legacy hook** from `~/.claude/settings.json` after switching to the native plugin -- otherwise the PostToolUse fires twice.
 
-## Skills
+</details>
 
-| Skill | Trigger | Purpose |
-|---|---|---|
-| `inject-atlas` | "inyectá al proyecto X la info de Y" | CREATE — parse atlas-pool .md and save to engram as type=atlas |
-| `atlas-edit` | "editá el atlas X" | UPDATE — PATCH `/observations/{id}` with field=value pairs |
-| `atlas-delete` | "borrá el atlas X" | DELETE — individual + bulk + optional raw .md cleanup |
-| `atlas-lookup` | "tengo atlas de URL X?" | READ — cross-project URL search |
-| `atlas-cleanup` | "atlas integrity check" | INTEGRITY — orphans / dangling / duplicates / malformed report |
-| `atlas-index` | "atlas index" | BROWSE — regenerates `Atlas-Index.md` in vault root |
-| `compare-with-atlas` | "compará con atlas" + auto via PostToolUse hook | READ — separates own_work vs atlas results in mem_search |
+---
 
 ## Architecture
 
@@ -106,34 +150,28 @@ ${CLAUDE_PLUGIN_ROOT}/
     └── compare-with-atlas/
 ```
 
-Project resolution: same algorithm as engram core — git remote → git root basename → cwd basename → fallback `dev`. Override per-invocation by passing project explicitly.
+Project resolution: same algorithm as engram core -- git remote → git root basename → cwd basename → fallback `dev`. Override per-invocation by passing `project` explicitly.
 
-## Hooks
+---
 
-The plugin registers two hooks via `hooks/hooks.json`:
+## Key Features You Should Know About
 
-### PostToolUse — `compare-with-atlas`
+### Auto-separated search results (PostToolUse hook)
 
-Matcher: `mcp__plugin_engram_engram__mem_search`. After every `mem_search` call, the hook reads the JSON tool_response on stdin, splits the results by `type` (own_work vs `type=atlas`), and emits an `additionalContext` payload so the agent presents the results with provenance. Silent if no atlas results.
+Every `mem_search` you make in a project that has atlas observations gets automatically split into two buckets: **own_work** (your decisions, bugs, sessions) and **atlas** (clipped articles, papers, references). You don't trigger this -- the hook fires after every search, reads the JSON tool_response on stdin, and emits an `additionalContext` payload so the agent presents results with provenance. Silent if no atlas results.
 
-### SessionStart — atlas doctor
+Matcher: `mcp__plugin_engram_engram__mem_search`. Registered in `hooks/hooks.json`.
 
-Matcher: `startup|clear`. Runs `scripts/session-start.sh` (which calls `scripts/_doctor.sh`) at every session start and after `/clear`. Timeout 3s, status message `atlas: checking environment...`. If everything is healthy, the hook is silent.
+### SessionStart doctor (self-check)
 
-## Doctor
+Every session and every `/clear` runs `scripts/_doctor.sh` with a 3s timeout. Four checks, each <100ms in a healthy env:
 
-`scripts/_doctor.sh` runs four checks, each <100ms in a healthy env:
+1. **engram reachable** -- `GET http://${ENGRAM_HOST}/health` with 1s timeout
+2. **deps present** -- `jq`, `curl`, `rg`, `fd` on PATH
+3. **vault layout** -- `${VAULT_ROOT:-$HOME/vault}/atlas-pool/` exists
+4. **no legacy hook** -- `~/.claude/settings.json` does NOT contain a PostToolUse hook for `compare-with-atlas` (would double-fire alongside the native plugin)
 
-1. **engram reachable** — `GET http://${ENGRAM_HOST}/health` with 1s timeout
-2. **deps present** — `jq`, `curl`, `rg`, `fd` on PATH
-3. **vault layout** — `${VAULT_ROOT:-$HOME/vault}/atlas-pool/` exists
-4. **no legacy hook** — `~/.claude/settings.json` does NOT contain a PostToolUse hook for `compare-with-atlas` (would double-fire alongside the native plugin)
-
-Exit codes:
-
-- `0` always — never blocks session start
-- stdout empty → silent OK (healthy env)
-- stdout JSON → warnings surfaced as `additionalContext` for the agent
+Exit codes: `0` always (never blocks session start). Stdout empty → silent OK. Stdout JSON → warnings surfaced as `additionalContext` for the agent.
 
 Example output (unhealthy env):
 
@@ -153,15 +191,36 @@ Run manually any time:
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/_doctor.sh
 ```
 
+### Vault-agnostic ingestion
+
+Built for Obsidian Web Clipper but the parser only assumes a markdown file with a YAML frontmatter and a body. Any tool that drops `.md` into `${VAULT_ROOT}/atlas-pool/` works (Logseq, Foam, Zettlr, raw curl). The injection skill auto-detects the engram project from your current git repo, so the same clip can land in different projects depending on where you trigger it from.
+
+---
+
+## Configuration
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `ENGRAM_HOST` | `http://127.0.0.1:7437` | engram HTTP API URL |
+| `ENGRAM_PORT` | `7437` | shorthand if `HOST` not set |
+| `VAULT_ROOT` | `$HOME/vault` | vault root (parent of `atlas-pool/`) |
+| `ATLAS_PROJECTS` | auto-detected | comma-separated list for `atlas-cleanup` cross-project scan |
+| `MOVE_RAW_AFTER_INJECT` | `false` | move `.md` to `atlas-pool/injected/` after inject |
+| `ATLAS_EDIT_CONFIRM_TYPE_CHANGE` | `false` | required `=yes` to change type of an atlas obs |
+
+---
+
 ## Troubleshooting
 
 **engram unreachable**: start engram (`engram serve` or however you run it) and re-check with `curl -sf http://127.0.0.1:7437/health`. Override host with `ENGRAM_HOST=host:port`.
 
-**missing commands**: install whichever the doctor flagged. On Windows Git Bash use scoop / chocolatey. On macOS `brew install jq curl ripgrep fd`. On Linux use your package manager — the names are usually `jq curl ripgrep fd-find`.
+**missing commands**: install whichever the doctor flagged. On Windows Git Bash use scoop / chocolatey. On macOS `brew install jq curl ripgrep fd`. On Linux use your package manager -- the names are usually `jq curl ripgrep fd-find`.
 
 **atlas-pool not found**: create it (`mkdir -p $HOME/vault/atlas-pool`) and point your Web Clipper output there. Override the parent with `VAULT_ROOT=/path/to/vault`.
 
 **legacy hook detected (double-fire)**: you installed via `bash install.sh` previously and switched to the native plugin. Open `~/.claude/settings.json`, remove the `PostToolUse` entry whose `command` matches `.claude/skills/compare-with-atlas`, save. The native plugin's `hooks/hooks.json` covers it.
+
+---
 
 ## Compatibility
 
@@ -170,23 +229,23 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/_doctor.sh
 - **OS**: Windows (Git Bash), macOS, Linux
 - **Deps**: `bash`, `jq`, `curl`, `rg` (ripgrep), `fd`
 
-## Configuration
+---
 
-| Env var | Default | Purpose |
-|---|---|---|
-| `ENGRAM_HOST` | `http://127.0.0.1:7437` | engram HTTP API URL |
-| `ENGRAM_PORT` | `7437` | shorthand if HOST not set |
-| `VAULT_ROOT` | `$HOME/vault` | vault root (parent of atlas-pool/) |
-| `ATLAS_PROJECTS` | auto-detected | comma-separated list for `atlas-cleanup` cross-project scan |
-| `MOVE_RAW_AFTER_INJECT` | `false` | move .md to `atlas-pool/injected/` after inject |
-| `ATLAS_EDIT_CONFIRM_TYPE_CHANGE` | `false` | required `=yes` to change type of an atlas obs |
+## Roadmap
 
-## License
+See [issues](https://github.com/Kirilgitlsiiejah/atlas-for-engram/issues) for planned features and known limitations.
 
-MIT, see [LICENSE](./LICENSE).
+---
 
-## Relationship to engram
+## Next Steps
 
-This is a **community / companion plugin** for [engram](https://github.com/Gentleman-Programming/engram). It integrates with engram's HTTP API and follows engram's claude-code plugin conventions (bash + curl + jq, defensive style, exit 0 always), but it is **not officially affiliated with, endorsed by, or maintained by the engram project**.
+- **Just installed?** Run `/inject-atlas` on any `.md` file in your `atlas-pool/` and watch the index regenerate.
+- **Already have engram memories?** Your next `mem_search` will auto-split own_work vs atlas via the PostToolUse hook -- no config required.
+- **Want integrity checks?** Run the `atlas-cleanup` skill after a few injection sessions to catch orphans, dangling refs, duplicates, and malformed observations.
+- **Ready to contribute?** Check the [open issues](https://github.com/Kirilgitlsiiejah/atlas-for-engram/issues).
 
-This plugin is independently maintained. Bugs, feature requests, and PRs go here, not to the engram repository.
+---
+
+<div align="center">
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+</div>

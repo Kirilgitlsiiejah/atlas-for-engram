@@ -5,7 +5,7 @@
   "plugins": [{
     "name": "atlas",
     "description": "Inject + retrieve atlas clips through engram with provenance hooks",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "author": { "name": "Kirilgitlsiiejah" },
     "source": "./",
     "category": "productivity",
