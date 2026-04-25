@@ -7,8 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get install -y shellcheck
-      - run: shellcheck -S warning $(find scripts skills -name '*.sh')
+      - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38  # corresponds to 2.0.0
+        with:
+          severity: warning
+          scandir: './'
+          ignore_paths: install.sh
   validate-json:
     runs-on: ubuntu-latest
     steps:

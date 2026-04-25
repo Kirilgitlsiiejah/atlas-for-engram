@@ -4,7 +4,6 @@
 # Defensive: NO `set -euo pipefail`, errors squelched with `2>/dev/null || true`.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# shellcheck source=/dev/null
 source "${SCRIPT_DIR}/_helpers.sh"
 
 WARNINGS=()

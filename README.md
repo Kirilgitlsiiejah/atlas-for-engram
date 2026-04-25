@@ -279,6 +279,29 @@ Cuando el doctor cae a L5 y el path no existe, agrega una pista de remediación:
 
 ---
 
+## CI
+
+Cuatro jobs corren en cada push y PR a `main`:
+
+- **shellcheck**: lintea bash via `ludeeus/action-shellcheck` pinned a SHA exacto. Severity `warning`. Config: `.shellcheckrc` en root.
+- **validate-json**: `jq -e .` sobre `plugin.json`, `marketplace.json`, `hooks.json`.
+- **bash-syntax**: `bash -n` sobre todos los `.sh`.
+- **version-sync**: chequea que `VERSION` y `plugin.json#version` no estén desincronizados.
+
+### shellcheck pin policy
+
+El action `ludeeus/action-shellcheck` se pinea a SHA exacto (no tag). Razón: prevenir upgrades silenciosos del action o de la versión de shellcheck que ese action incluye internamente.
+
+**Cómo bumpear**:
+1. Chequeá releases en https://github.com/ludeeus/action-shellcheck/releases
+2. Resolvé el SHA del commit del release: `gh api repos/ludeeus/action-shellcheck/git/ref/tags/<TAG> --jq .object.sha`
+3. Actualizá `.github/workflows/ci.yml` con el nuevo SHA + comment `# corresponds to <TAG>`
+4. Abrí PR aislado con título `chore(ci): bump shellcheck action to <SHA>`
+5. Si el bump introduce SC codes nuevos: triage en commit aparte dentro del mismo PR
+6. Merge sólo si CI pasa verde
+
+---
+
 ## Roadmap
 
 See [issues](https://github.com/Kirilgitlsiiejah/atlas-for-engram/issues) for planned features and known limitations.

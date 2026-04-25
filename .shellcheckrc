@@ -1,0 +1,13 @@
+# shellcheck config — atlas-for-engram
+# Centralizes per-line directives so scripts stay clean.
+
+# SC1091: "Not following sourced file." We source helpers via dynamic paths
+# (CLAUDE_PLUGIN_ROOT or BASH_SOURCE walk-up); shellcheck cannot resolve them
+# statically. Disabling globally avoids redundant `# shellcheck source=/dev/null`
+# directives in every consumer script.
+disable=SC1091
+
+# install.sh is a one-shot bootstrap that runs outside the plugin tree and
+# intentionally uses patterns (heredocs into ~/.claude, env-driven paths) that
+# are noisy under lint. Excluded by path so the rest of the tree stays strict.
+ignore_paths=install.sh

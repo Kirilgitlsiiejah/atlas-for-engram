@@ -51,7 +51,6 @@ set -- "${ARGS[@]}"
 # Source shared helpers (defensive — fallback inline if missing)
 ATLAS_HELPERS="${CLAUDE_PLUGIN_ROOT:-${BASH_SOURCE%/*}/../..}/scripts/_helpers.sh"
 if [[ -f "$ATLAS_HELPERS" ]]; then
-  # shellcheck source=/dev/null
   source "$ATLAS_HELPERS"
 else
   # Fallback inline: minimal detect_project + resolve_project + detect_vault.
