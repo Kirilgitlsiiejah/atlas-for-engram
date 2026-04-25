@@ -22,7 +22,7 @@ if [[ -f "$HOME/.claude/settings.json" ]] && command -v jq >/dev/null 2>&1; then
 fi
 
 [[ ${#WARNINGS[@]} -eq 0 ]] && exit 0
-MSG=$(printf 'atlas-doctor:\n')
-for w in "${WARNINGS[@]}"; do MSG+=$(printf '  - %s\n' "$w"); done
+MSG=$'atlas-doctor:\n'
+for w in "${WARNINGS[@]}"; do MSG+="  - $w"$'\n'; done
 jq -n --arg ctx "$MSG" '{continue: true, hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
 exit 0
