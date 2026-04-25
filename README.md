@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/atlas-hero.png" alt="atlas-for-engram" width="320" />
+<img src="./assets/atlas-hero.png" alt="atlas-for-engram" width="600" />
 
 <h1>atlas-for-engram</h1>
 
@@ -80,7 +80,7 @@ claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram && claude plugin
 ```
 
 <details>
-<summary><strong>Other install methods</strong> (two-step inspect, legacy manual)</summary>
+<summary><strong>Other install methods</strong> (two-step inspect)</summary>
 
 #### Two-step install
 
@@ -91,18 +91,6 @@ claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram
 # Inspect: cat ~/.claude/plugins/marketplaces/atlas-for-engram/.claude-plugin/marketplace.json
 claude plugin install atlas@atlas-for-engram
 ```
-
-#### Legacy manual install
-
-> **DEPRECATED -- removed in v0.2.0.** Kept temporarily for users on older Claude Code versions without native plugin support. New users should always use the native install above.
-
-```bash
-git clone https://github.com/Kirilgitlsiiejah/atlas-for-engram.git
-cd atlas-for-engram
-bash install.sh
-```
-
-The legacy installer copies skills to `$HOME/.claude/skills/` and prints a hook snippet for `$HOME/.claude/settings.json`. If you used this path before, **remove the legacy hook** from `~/.claude/settings.json` after switching to the native plugin -- otherwise the PostToolUse fires twice.
 
 </details>
 
