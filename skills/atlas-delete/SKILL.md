@@ -65,7 +65,7 @@ Si el usuario no especifica proyecto, default = `dev`.
 ### 2. Listar candidatos (preview obligatorio)
 
 ```bash
-bash '$HOME/.claude/skills/atlas-delete/delete.sh' --preview <filter_args>
+bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-delete/delete.sh' --preview <filter_args>
 ```
 
 El script devuelve por stdout un JSON array con los obs candidatos:
@@ -108,7 +108,7 @@ Tambien borro los .md crudos de ${VAULT_ROOT:-$HOME/vault}/atlas-pool/? [y/N]
 ### 5. Ejecutar delete
 
 ```bash
-bash '$HOME/.claude/skills/atlas-delete/delete.sh' --execute <id1> <id2> ... [--with-raw]
+bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-delete/delete.sh' --execute <id1> <id2> ... [--with-raw]
 ```
 
 El script devuelve por stdout un JSON resumen:
@@ -125,7 +125,7 @@ El script devuelve por stdout un JSON resumen:
 ### 6. Regenerar Atlas-Index (si hubo deletes)
 
 ```bash
-bash '$HOME/.claude/skills/atlas-index/generate.sh' <project>
+bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-index/generate.sh' <project>
 ```
 
 Solo si `deleted_obs` no está vacío.

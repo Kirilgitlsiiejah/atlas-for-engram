@@ -1,4 +1,13 @@
 #!/bin/bash
+cat <<'EOF' >&2
+================================================================
+DEPRECATED: this installer will be removed in v0.2.0.
+Recommended: claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram
+             claude plugin install atlas
+Continuing with legacy install in 3 seconds...
+================================================================
+EOF
+sleep 3
 # atlas-for-engram installer
 # Copies skills to $HOME/.claude/skills/ and prints hook snippet for settings.json
 
