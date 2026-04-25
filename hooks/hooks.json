@@ -1,0 +1,21 @@
+{
+  "description": "Atlas hooks — enriches mem_search with atlas provenance + session boot doctor",
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "mcp__plugin_engram_engram__mem_search",
+      "hooks": [{
+        "type": "command",
+        "command": "${CLAUDE_PLUGIN_ROOT}/skills/compare-with-atlas/hook.sh"
+      }]
+    }],
+    "SessionStart": [{
+      "matcher": "startup|clear",
+      "hooks": [{
+        "type": "command",
+        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh",
+        "timeout": 3,
+        "statusMessage": "atlas: checking environment..."
+      }]
+    }]
+  }
+}
