@@ -65,7 +65,7 @@ El script devuelve un JSON con esta forma:
      "title": "RNN Effectiveness", "source_url": "https://...", "content_excerpt": "..."}
   ],
   "pool_matches": [
-    {"path": "${VAULT_ROOT:-$HOME/vault}/atlas-pool/rnn.md", "source_url": "https://...",
+    {"path": "${ATLAS_VAULT:-$HOME/vault}/atlas-pool/rnn.md", "source_url": "https://...",
      "title": "RNN", "clipped": "2026-04-20"}
   ],
   "scenario": "both",
@@ -88,7 +88,7 @@ Si vienen `warnings` (ej: engram no responde), mencioná-las breves al final del
 
 Acciones posibles:
 - Verlo en engram: mem_get_observation <id>
-- Borrar el raw del pool (manual): borrá ${VAULT_ROOT:-$HOME/vault}/atlas-pool/<basename>
+- Borrar el raw del pool (manual): borrá ${ATLAS_VAULT:-$HOME/vault}/atlas-pool/<basename>
 - Re-inyectar (si el raw cambió): inyectá al proyecto <project> la info de <slug>
 ```
 
@@ -118,7 +118,7 @@ Acciones posibles:
 
 Acciones posibles:
 - Inyectarlo: inyectá al proyecto X la info de <basename sin .md>
-- Verlo: bat '${VAULT_ROOT:-$HOME/vault}/atlas-pool/<basename>'
+- Verlo: bat '${ATLAS_VAULT:-$HOME/vault}/atlas-pool/<basename>'
 ```
 
 #### Escenario `none` — No existe en ningún lado
@@ -138,6 +138,20 @@ Sugerencia: clipealo con Brave (Shift+Alt+O) y después invocá inject-atlas.
 - **No invoques atlas-edit ni atlas-index** — este skill solo reporta.
 - **Si el script devuelve `success: false`**, mostrá el error tal cual y parate.
 - **Si engram está caído**, mencionalo (`warnings` lo va a indicar) pero igual mostrá los `pool_matches` que hayas encontrado.
+
+## Vault resolution
+
+`lookup.sh` resuelve el vault con la cascada de 5 niveles del helper compartido (ver `README.md > Vault Resolution`).
+
+| Nivel | Fuente |
+|-------|--------|
+| L1    | `--vault <path>` flag pasado al script (`lookup.sh --vault /home/u/notes 'rnn'`) |
+| L2    | env var `$ATLAS_VAULT` |
+| L3    | env var `$VAULT_ROOT` (**deprecated** — emite warning una vez por sesión) |
+| L4    | walk-up desde `$PWD` buscando `.obsidian/` (dir) o `.atlas-pool` (archivo) |
+| L5    | fallback `$HOME/vault` |
+
+Migración: pasá de `VAULT_ROOT` a `ATLAS_VAULT` para silenciar el warning.
 
 ## Convenciones del usuario
 

@@ -47,7 +47,7 @@ echo ""
 cat "$REPO_DIR/settings-hook-snippet.json"
 echo ""
 echo "Optional configuration via env vars (see README):"
-echo "   ENGRAM_HOST, VAULT_ROOT, ATLAS_PROJECTS, MOVE_RAW_AFTER_INJECT"
+echo "   ENGRAM_HOST, ATLAS_VAULT (or VAULT_ROOT — legacy), ATLAS_PROJECTS, MOVE_RAW_AFTER_INJECT"
 echo ""
 echo "Docs: README.md"
 exit 0

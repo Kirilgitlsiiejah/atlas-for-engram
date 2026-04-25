@@ -100,7 +100,7 @@ Confirmás? [y/N]
 ### 4. Preguntar sobre el .md crudo
 
 ```
-Tambien borro los .md crudos de ${VAULT_ROOT:-$HOME/vault}/atlas-pool/? [y/N]
+Tambien borro los .md crudos de ${ATLAS_VAULT:-$HOME/vault}/atlas-pool/? [y/N]
 ```
 
 **Default = NO.** La inyección original fue no-destructiva, mantener simetría — el `.md` del pool puede sobrevivir al borrado de la obs sin problema.
@@ -150,6 +150,20 @@ Si hubo `failed`, listarlos también con su motivo presunto (404, server error, 
 - El `.md` crudo solo se borra si el usuario lo pide explícitamente (`--with-raw`).
 - NO borrar `Atlas-Index.md` — eso es regenerable.
 - NO modificar otros skills, NO commitear nada.
+
+## Vault resolution
+
+`delete.sh` resuelve el vault con la cascada de 5 niveles del helper compartido (ver `README.md > Vault Resolution`).
+
+| Nivel | Fuente |
+|-------|--------|
+| L1    | `--vault <path>` flag pasado al script (`delete.sh --vault /home/u/notes --execute 1937 --with-raw`) |
+| L2    | env var `$ATLAS_VAULT` |
+| L3    | env var `$VAULT_ROOT` (**deprecated** — emite warning una vez por sesión) |
+| L4    | walk-up desde `$PWD` buscando `.obsidian/` (dir) o `.atlas-pool` (archivo) |
+| L5    | fallback `$HOME/vault` |
+
+Migración: pasá de `VAULT_ROOT` a `ATLAS_VAULT` para silenciar el warning.
 
 ## Convenciones del usuario
 

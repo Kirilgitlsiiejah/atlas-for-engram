@@ -13,7 +13,7 @@ description: >-
 
 Skill de retrieval comparativo en modo EXPLÍCITO. Separa los resultados de `mem_search` por `type` para mostrar con provenance claro qué viene de tu trabajo propio vs qué viene de clips atlas ya inyectados a engram.
 
-> **Importante**: el modo automático silencioso lo cubre el hook `PostToolUse` configurado en `~/.claude/settings.json` (`compare-with-atlas/hook.sh`). Este skill es para invocación EXPLÍCITA por parte del usuario. NO leas `${VAULT_ROOT:-$HOME/vault}/atlas-pool/` — esa carpeta contiene clips RAW no inyectados que no deben aparecer en búsquedas de retrieval.
+> **Importante**: el modo automático silencioso lo cubre el hook `PostToolUse` configurado en `~/.claude/settings.json` (`compare-with-atlas/hook.sh`). Este skill es para invocación EXPLÍCITA por parte del usuario. NO leas `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` — esa carpeta contiene clips RAW no inyectados que no deben aparecer en búsquedas de retrieval.
 
 ## Filosofía
 
@@ -99,6 +99,14 @@ Formato de salida:
 El objetivo: cuando atlas no aporta nada nuevo, el usuario no debe notar que el skill corrió. Cuando atlas sí aporta, la información llega ordenada por fuente.
 
 ---
+
+## Vault resolution
+
+Este skill **no tiene flag `--vault`** — sus dos modos (skill explícito y hook PostToolUse) consumen `mem_search` y nunca leen el `atlas-pool/`. La referencia a `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` arriba es solo recordatorio de que ese directorio NO debe leerse desde acá.
+
+Si necesitás resolver el vault desde otro contexto, ver `README.md > Vault Resolution` (cascada L1-L5).
+
+Migración: pasá `VAULT_ROOT` → `ATLAS_VAULT` para silenciar el warning de deprecación.
 
 ## Convenciones del usuario que respetar
 

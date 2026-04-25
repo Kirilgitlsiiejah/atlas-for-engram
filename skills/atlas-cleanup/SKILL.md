@@ -174,6 +174,20 @@ Listo, reporte generado. No toqué nada.
 - NO commitear nada.
 - NO crear archivos auxiliares de reporte (la salida va al chat, no a un `.md`).
 
+## Vault resolution
+
+`cleanup.sh` resuelve el vault con la cascada de 5 niveles del helper compartido (ver `README.md > Vault Resolution` para el cuadro completo).
+
+| Nivel | Fuente |
+|-------|--------|
+| L1    | `--vault <path>` flag pasado al script (`cleanup.sh --vault /home/u/notes --scan`) |
+| L2    | env var `$ATLAS_VAULT` |
+| L3    | env var `$VAULT_ROOT` (**deprecated** — emite warning una vez por sesión) |
+| L4    | walk-up desde `$PWD` buscando `.obsidian/` (dir) o `.atlas-pool` (archivo) |
+| L5    | fallback `$HOME/vault` |
+
+Migración: si tenías `VAULT_ROOT` exportado, cambialo a `ATLAS_VAULT` y silenciás el warning.
+
 ## Convenciones del usuario
 
 - Idioma: rioplatense voseo (vos, dale, listo, bien, fantástico)

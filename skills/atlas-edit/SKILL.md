@@ -20,7 +20,7 @@ compare-...   →  READ    (diff pool vs engram)
 atlas-edit    →  UPDATE  ← este skill
 ```
 
-La edición es **solo a engram**. El `.md` crudo en `${VAULT_ROOT:-$HOME/vault}/atlas-pool\` queda intacto — si el usuario quiere editar el raw, lo hace a mano en Obsidian.
+La edición es **solo a engram**. El `.md` crudo en `${ATLAS_VAULT:-$HOME/vault}/atlas-pool\` queda intacto — si el usuario quiere editar el raw, lo hace a mano en Obsidian.
 
 ## Cuándo activarse
 
@@ -144,6 +144,12 @@ Output (rioplatense, directo):
 - **NUNCA cambiar el topic_key sin pedir confirmación explícita** — rompe la trazabilidad atlas-pool ↔ engram.
 - Si el PATCH falla por causa que no es 405 (404, 500, etc.): reportar el error claro y parar. No intentar fallback ciego.
 - No commitear, no crear archivos auxiliares, no escribir reportes.
+
+## Vault resolution
+
+Este skill **no tiene flag `--vault`** porque no toca el `atlas-pool/` ni el filesystem del vault — la edición es solo a engram. Las referencias a `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` en este SKILL.md son informativas (el modelo puede leer el raw para re-inyectar, pero esa lectura usa la misma cascada que el resto del ecosistema — ver `README.md > Vault Resolution`).
+
+Migración: si tenías `VAULT_ROOT` exportado, cambialo a `ATLAS_VAULT`.
 
 ## Convenciones del usuario
 

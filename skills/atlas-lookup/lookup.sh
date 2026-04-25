@@ -17,8 +17,13 @@
 #
 # Env vars:
 #   ENGRAM_HOST  default http://127.0.0.1:7437
-#   VAULT_ROOT   default $HOME/vault
-#   ATLAS_POOL   default ${VAULT_ROOT}/atlas-pool
+#   ATLAS_VAULT  canonical vault root. Cascade fallback (highest first):
+#                --vault flag → $ATLAS_VAULT → $VAULT_ROOT (legacy, warn) →
+#                walk-up marker → $HOME/vault.
+#   ATLAS_POOL   default <resolved-vault>/atlas-pool
+#
+# Flag (optional):
+#   --vault <path>   override the resolved vault for this invocation.
 #
 # This script is READ-ONLY. It never writes, deletes, or modifies anything.
 #

@@ -11,7 +11,7 @@ description: >-
 
 Genera un **catálogo navegable** de todas las observaciones `type=atlas` que tenés inyectadas en engram para un proyecto dado, agrupadas por `source_domain` (extraído del `topic_key` `atlas/<domain>/<slug>`).
 
-El output es un único archivo Markdown en la raíz del vault Obsidian (`${VAULT_ROOT:-$HOME/vault}/Atlas-Index.md`), pensado para ser:
+El output es un único archivo Markdown en la raíz del vault Obsidian (`${ATLAS_VAULT:-$HOME/vault}/Atlas-Index.md`), pensado para ser:
 
 - Linkeable desde otras notas: `[[Atlas-Index]]`
 - Navegable por sección de dominio: `[[Atlas-Index#karpathy.github.io]]`
@@ -23,7 +23,7 @@ El output es un único archivo Markdown en la raíz del vault Obsidian (`${VAULT
 engram (type=atlas, project=X)  ──[GET /observations/recent]──►  generate.sh
                                                                      │
                                                                      ▼
-                                                       ${VAULT_ROOT:-$HOME/vault}/Atlas-Index.md
+                                                       ${ATLAS_VAULT:-$HOME/vault}/Atlas-Index.md
                                                        (agrupado por source_domain)
 ```
 
@@ -65,7 +65,7 @@ El script:
 - Enriquece cada entry con timestamp (`created_at` → epoch + fecha legible) y tags extraídos del content (`tags: [...]`, `tags: a, b`, o `**Tags**: a, b`)
 - Genera tres secciones en orden: **Recent (last 7 days)** ordenado por timestamp desc, **By Domain** (agrupado por `source_domain` del `topic_key`, count desc), y **By Tag** (omitida si no hay tags en ninguna obs)
 - Header con stats: total, domains, tags únicos, recent count, oldest/newest dates
-- Escribe atómicamente `${VAULT_ROOT:-$HOME/vault}/Atlas-Index.md`
+- Escribe atómicamente `${ATLAS_VAULT:-$HOME/vault}/Atlas-Index.md`
 - Imprime un JSON resumen a stdout: `{path, project, total, domains, tags, recent_count, oldest, newest, timestamp, top3_domains, top3_tags}`
 - Exit 0 = OK, exit 1 = engram inalcanzable
 
@@ -78,7 +78,7 @@ Capturar el JSON de stdout y reportar (rioplatense, directo):
 ```
 Listo, regenerado el Atlas-Index.
 
-  path:       ${VAULT_ROOT:-$HOME/vault}/Atlas-Index.md
+  path:       ${ATLAS_VAULT:-$HOME/vault}/Atlas-Index.md
   entries:    <total>
   domains:    <domains>
   top 3:      <domain1> (<n1>), <domain2> (<n2>), <domain3> (<n3>)
@@ -106,6 +106,20 @@ Para sub-secciones por dominio:
 - **NO commitear** nada.
 - Si engram está caído (el script emite JSON `{success:false,...}` a stderr), reportar el error claro y parar — no inventar contenido ni dejar el archivo a medias. El write es atomic en POSIX; en Windows con `Atlas-Index.md` abierto en Obsidian puede requerir retry (el script ya hace 3 intentos con backoff de 500ms; si fallan todos, mantiene el `.tmp` para debug y emite error).
 - Si el proyecto no tiene observaciones `type=atlas`, igual generar el archivo con "0 entries" y reportarlo — no fallar.
+
+## Vault resolution
+
+`generate.sh` resuelve el vault con la cascada de 5 niveles del helper compartido (ver `README.md > Vault Resolution`). El `Atlas-Index.md` se escribe en la raíz del vault resuelto.
+
+| Nivel | Fuente |
+|-------|--------|
+| L1    | `--vault <path>` flag pasado al script (`generate.sh --vault /home/u/notes dev`) |
+| L2    | env var `$ATLAS_VAULT` |
+| L3    | env var `$VAULT_ROOT` (**deprecated** — emite warning una vez por sesión) |
+| L4    | walk-up desde `$PWD` buscando `.obsidian/` (dir) o `.atlas-pool` (archivo) |
+| L5    | fallback `$HOME/vault` |
+
+Migración: pasá de `VAULT_ROOT` a `ATLAS_VAULT` para silenciar el warning.
 
 ## Convenciones del usuario
 

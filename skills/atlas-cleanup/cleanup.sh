@@ -5,7 +5,11 @@
 #
 # Env vars (optional):
 #   ENGRAM_HOST  default http://127.0.0.1:7437
-#   VAULT_ROOT   default $HOME/vault
+#   ATLAS_VAULT  canonical vault root (parent of atlas-pool/). Cascade fallback:
+#                $ATLAS_VAULT → $VAULT_ROOT (legacy, warn) → walk-up marker → $HOME/vault.
+#
+# Flag (optional):
+#   --vault <path>   override the resolved vault for this invocation (highest precedence).
 #
 # Defensive: exit 0 always, JSON output to stdout, NEVER modifies anything (read-only).
 

@@ -192,10 +192,67 @@ Built for Obsidian Web Clipper but the parser only assumes a markdown file with 
 |---|---|---|
 | `ENGRAM_HOST` | `http://127.0.0.1:7437` | engram HTTP API URL |
 | `ENGRAM_PORT` | `7437` | shorthand if `HOST` not set |
-| `VAULT_ROOT` | `$HOME/vault` | vault root (parent of `atlas-pool/`) |
+| `ATLAS_VAULT` | (unset; cascade resolves) | canonical vault root (parent of `atlas-pool/`). Replaces `VAULT_ROOT`. |
+| `VAULT_ROOT` | (unset; legacy) | **deprecated** -- still respected for one release with a one-shot warning. Migrate to `ATLAS_VAULT`. |
 | `ATLAS_PROJECTS` | auto-detected | comma-separated list for `atlas-cleanup` cross-project scan |
 | `MOVE_RAW_AFTER_INJECT` | `false` | move `.md` to `atlas-pool/injected/` after inject |
 | `ATLAS_EDIT_CONFIRM_TYPE_CHANGE` | `false` | required `=yes` to change type of an atlas obs |
+
+---
+
+## Vault Resolution
+
+Cada skill que toca el `atlas-pool/` resuelve el vault por una **cascada de 5 niveles**. Gana el primero que matchea -- los demás se ignoran.
+
+| Nivel | Fuente                                          | Cuándo usarlo                          |
+|-------|-------------------------------------------------|-----------------------------------------|
+| **L1** | flag `--vault <path>` pasado al script         | Override puntual sin ensuciar env vars |
+| **L2** | env var `$ATLAS_VAULT`                          | Default canónico para tu shell         |
+| **L3** | env var `$VAULT_ROOT` (**legacy, deprecated**)  | Compat con setups previos -- migrá a `ATLAS_VAULT` |
+| **L4** | walk-up desde `$PWD` buscando un marker         | Working tree con vault auto-detectado  |
+| **L5** | fallback `$HOME/vault`                          | Si todo lo anterior falla              |
+
+### Markers de walk-up (L4)
+
+El walk-up parte de `$PWD` y sube directorio por directorio buscando alguno de estos:
+
+- **`.obsidian/`** -- directorio (es el marker nativo de Obsidian, no lo creás vos manualmente)
+- **`.atlas-pool`** -- archivo regular vacío (lo creás vos con `touch .atlas-pool` en la raíz del vault)
+
+> **Importante**: `.atlas-pool` tiene que ser un **archivo**, no un directorio. Si existe `.atlas-pool/` como directorio (suele pasar por confusión con la carpeta `atlas-pool/` que sí es un dir), el walk-up lo **ignora** y sigue subiendo.
+
+Termination guards: el walk-up para automáticamente al llegar a `/` (POSIX), un drive root tipo `/c` o `C:/` (Windows / Git Bash), o un UNC root tipo `//host/share`. También hay un cap defensivo de 64 iteraciones.
+
+### Migración desde `VAULT_ROOT`
+
+Si tenías esto en tu shellrc:
+
+```bash
+export VAULT_ROOT="$HOME/Documents/vault"
+```
+
+Cambialo a:
+
+```bash
+export ATLAS_VAULT="$HOME/Documents/vault"
+```
+
+`VAULT_ROOT` sigue funcionando -- emite un warning una sola vez por sesión (`warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead`) y se resuelve igual. Para silenciarlo: migrá a `ATLAS_VAULT`.
+
+### Cómo saber qué nivel se está usando
+
+El doctor (SessionStart) reporta el nivel resuelto en cada sesión:
+
+```
+atlas-doctor:
+  - vault: L4 (walk-up .obsidian) -> /home/u/projects/notes
+```
+
+Cuando el doctor cae a L5 y el path no existe, agrega una pista de remediación:
+
+```
+  - vault path /home/u/vault does not exist -- set $ATLAS_VAULT, place .atlas-pool marker, or create the dir
+```
 
 ---
 

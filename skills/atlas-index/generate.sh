@@ -9,8 +9,13 @@
 # Env vars (optional):
 #   ENGRAM_HOST  default http://127.0.0.1:7437
 #                (compat: if ENGRAM_PORT is set and ENGRAM_HOST is not, derive from port)
-#   VAULT_ROOT   default $HOME/vault
+#   ATLAS_VAULT  canonical vault root. Cascade fallback (highest first):
+#                --vault flag → $ATLAS_VAULT → $VAULT_ROOT (legacy, warn) →
+#                walk-up marker → $HOME/vault.
 #   RECENT_DAYS  default 7   (window for "Recent" section)
+#
+# Flag (optional):
+#   --vault <path>   override the resolved vault for this invocation.
 #
 # Exit code: always 0 (errors signaled via JSON on stderr per ecosystem convention).
 #
