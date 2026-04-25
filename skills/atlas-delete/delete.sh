@@ -22,13 +22,25 @@
 #
 # Exit code: always 0 (errors signaled via JSON on stderr).
 
+# Parse --vault flag (filtered out of $@ before MODE / IDs).
+VAULT_OVERRIDE=""
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vault)   VAULT_OVERRIDE="${2:-}"; shift 2 ;;
+    --vault=*) VAULT_OVERRIDE="${1#--vault=}"; shift ;;
+    *)         ARGS+=("$1"); shift ;;
+  esac
+done
+set -- "${ARGS[@]}"
+
 # Source shared helpers (defensive — fallback inline if missing)
 ATLAS_HELPERS="${CLAUDE_PLUGIN_ROOT:-${BASH_SOURCE%/*}/../..}/scripts/_helpers.sh"
 if [[ -f "$ATLAS_HELPERS" ]]; then
   # shellcheck source=/dev/null
   source "$ATLAS_HELPERS"
 else
-  # Fallback inline: minimal detect_project + resolve_project
+  # Fallback inline: minimal detect_project + resolve_project + detect_vault.
   detect_project() {
     local proj=""
     if command -v git >/dev/null 2>&1; then
@@ -49,6 +61,28 @@ else
     local explicit="${1:-}"
     if [[ -n "$explicit" ]]; then printf '%s' "$explicit"; else detect_project; fi
   }
+  detect_vault() {
+    local override="${1:-}" v="" lvl=""
+    if [[ -n "$override" ]]; then v="$override"; lvl=1
+    elif [[ -n "${ATLAS_VAULT:-}" ]]; then v="$ATLAS_VAULT"; lvl=2
+    elif [[ -n "${VAULT_ROOT:-}" ]]; then
+      [[ -z "${_ATLAS_VAULT_ROOT_WARNED:-}" ]] && \
+        printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2 && \
+        export _ATLAS_VAULT_ROOT_WARNED=1
+      v="$VAULT_ROOT"; lvl=3
+    else
+      local d="$PWD" i=0
+      while [[ $i -lt 64 ]]; do
+        if [[ -d "$d/.obsidian" ]] || [[ -f "$d/.atlas-pool" ]]; then v="$d"; lvl=4; break; fi
+        [[ "$d" == "/" || "$d" =~ ^/[a-zA-Z]$ || "$d" =~ ^[A-Za-z]:/?$ ]] && break
+        local p; p=$(dirname "$d" 2>/dev/null); [[ -z "$p" || "$p" == "$d" ]] && break
+        d="$p"; i=$((i+1))
+      done
+      [[ -z "$v" ]] && { v="${HOME}/vault"; lvl=5; }
+    fi
+    export ATLAS_VAULT_RESOLVED="$v" ATLAS_VAULT_RESOLVED_LEVEL="$lvl"
+    printf '%s' "$v"
+  }
 fi
 
 # FIX 14 — standardize on ENGRAM_HOST. Keep ENGRAM_PORT only as a compat shim
@@ -57,8 +91,8 @@ if [[ -z "${ENGRAM_HOST:-}" && -n "${ENGRAM_PORT:-}" ]]; then
   ENGRAM_HOST="http://127.0.0.1:${ENGRAM_PORT}"
 fi
 ENGRAM_HOST="${ENGRAM_HOST:-http://127.0.0.1:7437}"
-VAULT_ROOT="${VAULT_ROOT:-$HOME/vault}"
-ATLAS_POOL="${ATLAS_POOL:-${VAULT_ROOT}/atlas-pool}"
+VAULT=$(detect_vault "$VAULT_OVERRIDE")
+ATLAS_POOL="${ATLAS_POOL:-${VAULT}/atlas-pool}"
 
 MODE="${1:-}"
 shift 2>/dev/null || true
