@@ -158,14 +158,32 @@ _atlas_walk_up() {
   return 0
 }
 
-# _atlas_warn_legacy — emite warning una sola vez por sesión (incluye subshells
-# vía export del sentinel) cuando $VAULT_ROOT está seteado. Idempotente.
-# REQ-DEPR-1.
+# _atlas_warn_legacy — emite warning una sola vez por sesión cuando $VAULT_ROOT
+# está seteado. Idempotente. REQ-DEPR-1.
+#
+# Implementación: doble guard.
+#   1. Sentinel in-process ($_ATLAS_VAULT_ROOT_WARNED) — cubre repeticiones en
+#      el mismo proceso (cheap, sin syscalls).
+#   2. Flag filesystem en $TMPDIR — cubre subshells y procesos hijos creados
+#      por command substitution `$()`. El export del sentinel NO se propaga
+#      del child al parent, así que el archivo es la única forma robusta.
+#
+# El flag persiste durante la "sesión de shell" — /tmp se limpia al boot,
+# que es el scope intuitivo. No intentamos ser más sofisticados que eso.
 _atlas_warn_legacy() {
-  if [[ -z "${_ATLAS_VAULT_ROOT_WARNED:-}" ]]; then
-    printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2
-    export _ATLAS_VAULT_ROOT_WARNED=1
+  # Guard in-process (mismo proceso, repeated calls).
+  if [[ -n "${_ATLAS_VAULT_ROOT_WARNED:-}" ]]; then
+    return 0
   fi
+  # Guard cross-process via filesystem flag.
+  local flag="${TMPDIR:-/tmp}/_atlas_vault_root_warned.${USER:-anon}.flag"
+  if [[ -e "$flag" ]]; then
+    export _ATLAS_VAULT_ROOT_WARNED=1
+    return 0
+  fi
+  printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2
+  export _ATLAS_VAULT_ROOT_WARNED=1
+  : > "$flag" 2>/dev/null || true
 }
 
 # detect_vault — resuelve el vault root usando una cascada de 5 niveles.
