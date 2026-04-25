@@ -126,8 +126,8 @@ ${CLAUDE_PLUGIN_ROOT}/
 ├── hooks/
 │   └── hooks.json          # PostToolUse + SessionStart registration
 ├── scripts/
-│   ├── _helpers.sh         # detect_project / resolve_project
-│   ├── _doctor.sh          # healthcheck (4 checks)
+│   ├── _helpers.sh         # detect_project / resolve_project / detect_vault cascade
+│   ├── _doctor.sh          # healthcheck (6 checks)
 │   └── session-start.sh    # SessionStart shim → calls _doctor.sh
 └── skills/
     ├── inject-atlas/
@@ -153,12 +153,14 @@ Matcher: `mcp__plugin_engram_engram__mem_search`. Registered in `hooks/hooks.jso
 
 ### SessionStart doctor (self-check)
 
-Every session and every `/clear` runs `scripts/_doctor.sh` with a 3s timeout. Four checks, each <100ms in a healthy env:
+Every session and every `/clear` runs `scripts/_doctor.sh` with a 3s timeout. Six checks, each <100ms in a healthy env:
 
 1. **engram reachable** -- `GET http://${ENGRAM_HOST}/health` with 1s timeout
 2. **deps present** -- `jq`, `curl`, `rg`, `fd` on PATH
-3. **vault layout** -- `<resolved-vault>/atlas-pool/` exists (resolved via the [vault cascade](#vault-resolution))
-4. **no legacy hook** -- `~/.claude/settings.json` does NOT contain a PostToolUse hook for `compare-with-atlas` (would double-fire alongside the native plugin)
+3. **vault resolution report** -- always reports the resolved level (L1..L5) and path, even when healthy, via `additionalContext` (so you can see which cascade branch fired)
+4. **L5-fallback missing** -- if the cascade fell to `$HOME/vault` (L5) AND that directory does not exist, surface a remediation hint
+5. **vault layout** -- `<resolved-vault>/atlas-pool/` exists (resolved via the [vault cascade](#vault-resolution))
+6. **no legacy hook** -- `~/.claude/settings.json` does NOT contain a PostToolUse hook for `compare-with-atlas` (would double-fire alongside the native plugin)
 
 Exit codes: `0` always (never blocks session start). Stdout empty → silent OK. Stdout JSON → warnings surfaced as `additionalContext` for the agent.
 

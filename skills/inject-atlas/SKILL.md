@@ -1,16 +1,16 @@
 ---
 name: inject-atlas
-description: Inyecta un clip del atlas-pool a engram asignándolo a un proyecto específico. Usar cuando el usuario diga "inyectá al proyecto X la info de Y", "agregá conocimiento a engram de Y", "inject Y to project X", o variantes. El skill lee el .md de ${ATLAS_VAULT:-$HOME/vault}/atlas-pool\, parsea frontmatter, y llama mem_save con type=atlas asignado al proyecto que el usuario indicó.
+description: Inyecta un clip del atlas-pool a engram asignándolo a un proyecto específico. Usar cuando el usuario diga "inyectá al proyecto X la info de Y", "agregá conocimiento a engram de Y", "inject Y to project X", o variantes. El skill lee el .md de ${ATLAS_VAULT:-$HOME/vault}/atlas-pool/, parsea frontmatter, y llama mem_save con type=atlas asignado al proyecto que el usuario indicó.
 ---
 
 # inject-atlas
 
-Inyecta un clip crudo del **atlas-pool** (clips de Obsidian Web Clipper sin proyecto asignado) a **engram**, vinculándolo a un proyecto específico. La operación es **no-destructiva**: el `.md` original queda intacto en `${ATLAS_VAULT:-$HOME/vault}/atlas-pool\`.
+Inyecta un clip crudo del **atlas-pool** (clips de Obsidian Web Clipper sin proyecto asignado) a **engram**, vinculándolo a un proyecto específico. La operación es **no-destructiva**: el `.md` original queda intacto en `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/`.
 
 ## Modelo conceptual
 
 ```
-Brave + Web Clipper  →  ${ATLAS_VAULT:-$HOME/vault}/atlas-pool\<slug>.md   (crudo, huérfano)
+Brave + Web Clipper  →  ${ATLAS_VAULT:-$HOME/vault}/atlas-pool/<slug>.md   (crudo, huérfano)
 Usuario invoca skill →  mem_save(type=atlas, project=<X>)   (clasificado)
 ```
 
@@ -60,7 +60,7 @@ fd -e md . "${ATLAS_VAULT:-$HOME/vault}/atlas-pool" --max-depth 1
 
 O en PowerShell:
 ```powershell
-Get-ChildItem "${ATLAS_VAULT:-$HOME/vault}/atlas-pool\*.md" | Select-Object Name, LastWriteTime
+Get-ChildItem "${ATLAS_VAULT:-$HOME/vault}/atlas-pool/*.md" | Select-Object Name, LastWriteTime
 ```
 
 Estrategia de match (en orden):
@@ -283,13 +283,15 @@ La regeneración es atomic (write a .tmp + rename) — el archivo nunca queda a 
 
 ## Vault resolution
 
-Este skill **no tiene flag `--vault`** porque la inyección la conduce el modelo (lee el `.md` directamente con `bat`/`fd`, sin invocar un script intermedio). Las rutas que aparecen acá usan `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` con el mismo orden de precedencia que el resto del ecosistema:
+Este skill **no tiene flag `--vault`** (el L1 del cascade) porque la inyección la conduce el modelo: lee el `.md` directamente con `bat`/`fd`, sin invocar un script intermedio que parsée flags. Para inject-atlas, el orden efectivo es L2→L5:
 
-1. `$ATLAS_VAULT` (canónico)
-2. `$VAULT_ROOT` (**deprecated** — el resto de scripts emite warning)
-3. fallback `$HOME/vault`
+1. **L1** — `--vault <path>` flag → **N/A para este skill** (no es script, es prompt-driven)
+2. **L2** — `$ATLAS_VAULT` (canónico)
+3. **L3** — `$VAULT_ROOT` (**deprecated** — emite warning una vez por sesión vía los demás scripts)
+4. **L4** — walk-up desde `$PWD` buscando `.obsidian/` (directorio) o `.atlas-pool` (archivo)
+5. **L5** — fallback `$HOME/vault`
 
-Si tu vault no está en ningún lado de los 3 anteriores, exportá `ATLAS_VAULT` antes de invocar el skill. Para el cuadro completo de resolución (incluido walk-up con `.obsidian/` o `.atlas-pool`), ver `README.md > Vault Resolution`.
+Si tu vault no resuelve por ninguno de los 4 niveles disponibles, exportá `ATLAS_VAULT` antes de invocar el skill. Para el cuadro completo del cascade (incluyendo el flag L1 que sí existe en los scripts auxiliares como `cleanup.sh`, `lookup.sh`, `delete.sh`, `generate.sh`), ver `README.md > Vault Resolution`.
 
 Migración: pasá `VAULT_ROOT` → `ATLAS_VAULT`.
 

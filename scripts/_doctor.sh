@@ -62,16 +62,13 @@ if [[ -f "$HOME/.claude/settings.json" ]] && command -v jq >/dev/null 2>&1; then
 fi
 
 # Always include the vault resolution line in stdout so the user can see
-# which branch was taken even when nothing else is wrong.
-VAULT_LINE="vault: L${VAULT_LEVEL} (${VAULT_LABEL}) -> ${VAULT_PATH}"
-
-if [[ ${#WARNINGS[@]} -eq 0 ]]; then
-  # Healthy: emit only the vault line as additionalContext (silent if path is empty).
-  if [[ -n "$VAULT_PATH" ]]; then
-    MSG=$'atlas-doctor:\n  - '"$VAULT_LINE"$'\n'
-    jq -n --arg ctx "$MSG" '{continue: true, hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
-  fi
-  exit 0
+# which branch was taken even when nothing else is wrong (REQ-OBS-1).
+# If the resolution returned an empty path (regression / detect_vault broken),
+# render an explicit "(unresolved) -> (unknown)" so silence never masks a bug.
+if [[ -n "$VAULT_PATH" ]]; then
+  VAULT_LINE="vault: L${VAULT_LEVEL} (${VAULT_LABEL}) -> ${VAULT_PATH}"
+else
+  VAULT_LINE="vault: L? (unresolved) -> (unknown)"
 fi
 
 MSG=$'atlas-doctor:\n  - '"$VAULT_LINE"$'\n'

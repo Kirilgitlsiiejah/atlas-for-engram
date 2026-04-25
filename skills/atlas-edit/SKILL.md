@@ -20,7 +20,7 @@ compare-...   →  READ    (diff pool vs engram)
 atlas-edit    →  UPDATE  ← este skill
 ```
 
-La edición es **solo a engram**. El `.md` crudo en `${ATLAS_VAULT:-$HOME/vault}/atlas-pool\` queda intacto — si el usuario quiere editar el raw, lo hace a mano en Obsidian.
+La edición es **solo a engram**. El `.md` crudo en `${ATLAS_VAULT:-$HOME/vault}/atlas-pool/` queda intacto — si el usuario quiere editar el raw, lo hace a mano en Obsidian.
 
 ## Cuándo activarse
 
