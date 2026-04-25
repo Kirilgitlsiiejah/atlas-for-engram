@@ -292,11 +292,11 @@ ATLAS_OBS=$(echo "$ATLAS_RAW" | jq --argjson emap "$EPOCH_MAP" --argjson cutoff 
       )?,
       # tags: [a, b, c]     (yaml inline array)
       ( content | scan("(?im)^tags\\s*:\\s*\\[([^\\]]+)\\]") | .[0]
-        | split(",") | map(gsub("^\\s+|\\s+$|^[\"'']|[\"'']$"; "")) | map(select(length>0))
+        | split(",") | map(gsub("^\\s+|\\s+$|^[\"\\u0027]|[\"\\u0027]$"; "")) | map(select(length>0))
       )?,
       # tags: a, b, c       (yaml inline plain)
       ( content | scan("(?im)^tags\\s*:\\s*([^\\[\\n][^\\n]*)") | .[0]
-        | split(",") | map(gsub("^\\s+|\\s+$|^[\"'']|[\"'']$"; "")) | map(select(length>0))
+        | split(",") | map(gsub("^\\s+|\\s+$|^[\"\\u0027]|[\"\\u0027]$"; "")) | map(select(length>0))
       )?
     ]
     | map(select(. != null)) | add // []

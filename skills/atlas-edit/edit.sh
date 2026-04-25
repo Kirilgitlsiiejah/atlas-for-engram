@@ -45,7 +45,6 @@ else
 fi
 
 OBS_ID="${1:-}"
-PROJECT_ARG=$(resolve_project "${2:-}")
 shift 2 2>/dev/null || true
 
 # FIX 14 — ENGRAM_HOST is canonical; ENGRAM_PORT only used as compat shim.
