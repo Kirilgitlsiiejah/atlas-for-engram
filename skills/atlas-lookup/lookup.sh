@@ -39,7 +39,13 @@ VAULT_OVERRIDE=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault=*) VAULT_OVERRIDE="${1#--vault=}"; shift ;;
+    --vault=*)
+      VAULT_OVERRIDE="${1#--vault=}"
+      if [[ -z "$VAULT_OVERRIDE" || "$VAULT_OVERRIDE" == --* ]]; then
+        printf '%s\n' '{"success":false,"error":"--vault requires a non-empty path argument"}'
+        exit 0
+      fi
+      shift ;;
     --vault)
       if [[ $# -lt 2 || -z "${2:-}" || "${2:-}" == --* ]]; then
         printf '%s\n' '{"success":false,"error":"--vault requires a path argument"}'
@@ -70,15 +76,30 @@ else
     if [[ ${#p} -gt 1 && "$p" == */ && "$p" != "//"*/* ]]; then
       p="${p%/}"
     fi
+    # Collapse multiple consecutive slashes (preserve UNC //host/share leading double-slash)
+    local _prefix=""
+    if [[ "$p" == //*/* ]]; then
+      # Preserve UNC prefix //host
+      _prefix="//"
+      p="${p#//}"
+    fi
+    while [[ "$p" == *"//"* ]]; do
+      p="${p//\/\//\/}"
+    done
+    p="${_prefix}${p}"
     printf '%s' "$p"
   }
   _atlas_warn_legacy() {
     if [[ -n "${_ATLAS_VAULT_ROOT_WARNED:-}" ]]; then return 0; fi
-    local flag="${TMPDIR:-/tmp}/_atlas_vault_root_warned.${USER:-anon}.flag"
-    if [[ -e "$flag" ]]; then export _ATLAS_VAULT_ROOT_WARNED=1; return 0; fi
-    printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2
+    # Atomic directory flag (mkdir is atomic, won't follow symlinks).
+    # Per-shell-tree via $PPID. Username fallback chain handles Git Bash on Windows
+    # (no $USER) and edge cases. See _helpers.sh _atlas_warn_legacy for full rationale.
+    local _flag_dir="${TMPDIR:-/tmp}/_atlas_vault_warned.${USER:-${USERNAME:-${LOGNAME:-anon}}}.${PPID:-0}"
+    if mkdir "$_flag_dir" 2>/dev/null; then
+      printf '%s\n' "warning: \$VAULT_ROOT is deprecated; use \$ATLAS_VAULT instead" >&2
+    fi
     export _ATLAS_VAULT_ROOT_WARNED=1
-    : > "$flag" 2>/dev/null || true
+    return 0
   }
   # Fallback inline: minimal detect_vault (cascade L1→L5).
   detect_vault() {

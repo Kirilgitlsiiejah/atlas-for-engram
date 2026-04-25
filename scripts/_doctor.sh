@@ -53,7 +53,12 @@ if [[ "$VAULT_LEVEL" == "5" && ! -d "$VAULT_PATH" ]]; then
 fi
 
 # Existing pool check — keep semantics, but anchored to the resolved vault.
-[[ -d "${VAULT_PATH}/atlas-pool" ]] || WARNINGS+=("atlas-pool not found at ${VAULT_PATH}/atlas-pool")
+# Guard with VAULT_PATH non-empty: when detect_vault returns empty (regression
+# defensive branch), we'd otherwise emit "atlas-pool not found at /atlas-pool"
+# which masks the real problem (the unresolved-vault line above already signals it).
+if [[ -n "$VAULT_PATH" ]]; then
+  [[ -d "${VAULT_PATH}/atlas-pool" ]] || WARNINGS+=("atlas-pool not found at ${VAULT_PATH}/atlas-pool")
+fi
 
 if [[ -f "$HOME/.claude/settings.json" ]] && command -v jq >/dev/null 2>&1; then
   jq -e '.hooks.PostToolUse[]?.hooks[]?.command | select(test("\\.claude/skills/compare-with-atlas"))' \

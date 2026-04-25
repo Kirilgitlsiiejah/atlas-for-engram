@@ -71,11 +71,14 @@ _atlas_normalize_path() {
   # 1. Convertir backslashes a forward slashes.
   p="${p//\\//}"
 
-  # 2. Convertir prefijo de drive "X:" o "X:/" → "/x/" (lowercase drive letter).
-  #    Sólo si la cadena empieza con [A-Za-z]: (drive letter explícito).
-  if [[ "$p" =~ ^([A-Za-z]):(/?)(.*)$ ]]; then
+  # 2. Convertir prefijo de drive "X:/..." → "/x/..." (lowercase drive letter).
+  #    Sólo si la cadena empieza con [A-Za-z]:/ (drive letter explícito + slash).
+  #    Drive-relative paths como "D:foo" (sin slash) son ambiguos en Windows
+  #    (drive-relative al cwd de ese drive) y NO se soportan deliberadamente —
+  #    se dejan pasar tal cual y se tratan como un nombre con dos puntos.
+  if [[ "$p" =~ ^([A-Za-z]):/(.*)$ ]]; then
     local drive="${BASH_REMATCH[1],,}"  # lowercase
-    local rest="${BASH_REMATCH[3]}"
+    local rest="${BASH_REMATCH[2]}"
     p="/${drive}/${rest}"
   fi
 
@@ -164,26 +167,41 @@ _atlas_walk_up() {
 # Implementación: doble guard.
 #   1. Sentinel in-process ($_ATLAS_VAULT_ROOT_WARNED) — cubre repeticiones en
 #      el mismo proceso (cheap, sin syscalls).
-#   2. Flag filesystem en $TMPDIR — cubre subshells y procesos hijos creados
-#      por command substitution `$()`. El export del sentinel NO se propaga
-#      del child al parent, así que el archivo es la única forma robusta.
+#   2. Flag filesystem (DIRECTORY) en $TMPDIR — cubre subshells y procesos
+#      hijos creados por command substitution `$()`. El export del sentinel
+#      NO se propaga del child al parent, así que el flag es la única forma
+#      robusta cross-process.
 #
-# El flag persiste durante la "sesión de shell" — /tmp se limpia al boot,
-# que es el scope intuitivo. No intentamos ser más sofisticados que eso.
+# Por qué directory + mkdir (no file + : >):
+#   - mkdir es ATÓMICO (no race window entre check y write — quien gana, gana)
+#   - mkdir NO sigue symlinks (file flag con `: >` los seguía y truncaba el
+#     target — riesgo de symlink-attack en /tmp multi-usuario)
+#   - directory es semánticamente "ya creado" o "no" — no hay estado parcial
+#
+# Por qué $PPID en el nombre:
+#   - En Git Bash for Windows, /tmp mapea a %TEMP% que NUNCA se limpia por OS,
+#     así que un flag sin scope persistiría para siempre y romper REQ-DEPR-1
+#     ("una vez por sesión"). $PPID hace el flag per-shell-tree (cada terminal
+#     o parent shell tiene su propio flag), que es el scope intuitivo.
+#
+# Username fallback chain ($USER → $USERNAME → $LOGNAME → anon):
+#   - Git Bash for Windows NO setea $USER (usa $USERNAME). Sin fallback chain,
+#     todos los usuarios Windows colapsarían a "anon" — colisión multi-usuario.
 _atlas_warn_legacy() {
   # Guard in-process (mismo proceso, repeated calls).
   if [[ -n "${_ATLAS_VAULT_ROOT_WARNED:-}" ]]; then
     return 0
   fi
-  # Guard cross-process via filesystem flag.
-  local flag="${TMPDIR:-/tmp}/_atlas_vault_root_warned.${USER:-anon}.flag"
-  if [[ -e "$flag" ]]; then
-    export _ATLAS_VAULT_ROOT_WARNED=1
-    return 0
+  # Guard cross-process via atomic directory flag (mkdir is atomic, won't
+  # follow symlinks, won't truncate). Per-shell-tree via $PPID.
+  local _flag_dir="${TMPDIR:-/tmp}/_atlas_vault_warned.${USER:-${USERNAME:-${LOGNAME:-anon}}}.${PPID:-0}"
+  if mkdir "$_flag_dir" 2>/dev/null; then
+    # We won the race — emit the warning.
+    printf '%s\n' "warning: \$VAULT_ROOT is deprecated; use \$ATLAS_VAULT instead" >&2
   fi
-  printf 'warning: $VAULT_ROOT is deprecated; use $ATLAS_VAULT instead\n' >&2
+  # Either we won and warned, or someone else won earlier — mark in-process either way.
   export _ATLAS_VAULT_ROOT_WARNED=1
-  : > "$flag" 2>/dev/null || true
+  return 0
 }
 
 # detect_vault — resuelve el vault root usando una cascada de 5 niveles.
