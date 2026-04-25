@@ -1,11 +1,11 @@
 # shellcheck config — atlas-for-engram
 # Centralizes per-line directives so scripts stay clean.
 
-# SC1091: "Not following sourced file." We source helpers via dynamic paths
-# (CLAUDE_PLUGIN_ROOT or BASH_SOURCE walk-up); shellcheck cannot resolve them
-# statically. Disabling globally avoids redundant `# shellcheck source=/dev/null`
-# directives in every consumer script.
-disable=SC1091
+# SC1090 / SC1091: "Can't follow non-constant source" / "Not following sourced
+# file." We source helpers via dynamic paths (CLAUDE_PLUGIN_ROOT or BASH_SOURCE
+# walk-up); shellcheck cannot resolve them statically. Disabling globally avoids
+# redundant `# shellcheck source=/dev/null` directives in every consumer script.
+disable=SC1090,SC1091
 
 # Note: per-path exclusions (e.g. install.sh) live in `.github/workflows/ci.yml`
 # under `ludeeus/action-shellcheck`'s `ignore_names`, since `.shellcheckrc` does
