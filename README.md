@@ -17,16 +17,27 @@ Cross-OS (Windows Git Bash, macOS, Linux). Stack: bash + curl + jq + rg + fd. Sa
 ## Install (recommended — native plugin)
 
 ```bash
-claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram
-claude plugin install atlas
+claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram && claude plugin install atlas@atlas-for-engram
 ```
+
+> **Note**: Two-step install is also supported if you prefer to inspect the marketplace before installing — see [Two-step install](#two-step-install) below.
 
 The marketplace points at this repo's `.claude-plugin/marketplace.json`. Once installed, Claude Code resolves all skills, hooks, and scripts from `${CLAUDE_PLUGIN_ROOT}` automatically — no manual file copies, no settings.json edits.
 
 To update later:
 
 ```bash
-claude plugin update atlas
+claude plugin update atlas@atlas-for-engram
+```
+
+### Two-step install
+
+If you want to inspect the marketplace before installing the plugin (security audit, version check, etc.):
+
+```bash
+claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram
+# Inspect: cat ~/.claude/plugins/marketplaces/atlas-for-engram/.claude-plugin/marketplace.json
+claude plugin install atlas@atlas-for-engram
 ```
 
 ## Install (legacy / manual)
