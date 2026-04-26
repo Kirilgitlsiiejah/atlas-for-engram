@@ -66,6 +66,16 @@ Una sola vez al principio, instalás el plugin desde el marketplace de Claude Co
 
 De ahí en más, **no lo invocás directo** — vive embebido en cada conversación con Claude. Skills, hooks y scripts se resuelven solos desde `${CLAUDE_PLUGIN_ROOT}`. Cero copies manuales, cero edits a `settings.json`.
 
+#### Actualizar el plugin
+
+Claude Code se auto-actualiza solo, pero si querés forzar la última versión refrescás el marketplace y reiniciás:
+
+```bash
+/plugin marketplace update github:Kirilgitlsiiejah/atlas-for-engram
+```
+
+Cerrá y abrí Claude Code de nuevo — la nueva versión queda activa al arrancar. Es así de fácil.
+
 ---
 
 ## ¿Y después?
