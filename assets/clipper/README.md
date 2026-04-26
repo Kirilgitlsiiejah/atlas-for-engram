@@ -2,6 +2,16 @@
 
 Obsidian Web Clipper, brandeado y enchufado al `atlas-pool`.
 
+## ¿Solo querés usarlo?
+
+Si solo querés instalar el clipper, **no necesitás buildear nada**. Descargalo desde la [release v0.2.0](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/tag/v0.2.0):
+
+- Chrome / Edge / Brave: [atlas-clipper-1.6.2-chrome.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-chrome.zip)
+- Firefox: [atlas-clipper-1.6.2-firefox.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-firefox.zip)
+- Safari: [atlas-clipper-1.6.2-safari.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-safari.zip)
+
+Saltá directo a [Instalación por browser](#instalación-por-browser) más abajo. El resto de este documento es para devs que quieran rebuildear (cambio de íconos, bump de upstream).
+
 ## ¿Qué es esto?
 
 Es un fork minimal del [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) oficial. Solo cambian dos cosas:

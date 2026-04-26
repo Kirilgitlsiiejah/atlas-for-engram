@@ -268,34 +268,21 @@ Cuando el doctor cae a L5 y el path no existe, agrega remediation hint:
 
 ## Obsidian Web Clipper brandeado
 
-Atlas-for-engram incluye una versión brandeada del [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) oficial, con dos overrides minimal:
+Atlas-for-engram incluye una versión brandeada del [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) oficial: ícono Atlas en la toolbar y default folder `atlas-pool` (en vez de `Clippings` upstream). Todo lo demás sigue al upstream — settings, templates, behavior. Es un patch, no un rebrand.
 
-- **Default folder** = `atlas-pool` (en vez de `Clippings` upstream)
-- **Ícono Atlas** en la toolbar del browser
+### Descargá el zip de tu browser
 
-Todo lo demás sigue al upstream — settings, templates, behavior. Es un patch, no un rebrand.
+Pre-buildeados, listos para `Load unpacked`:
 
-### Builds prearmados
-
-Los `.zip` para los 3 browsers viven en `assets/clipper/dist/` (gitignored — se generan localmente, no se commitean):
-
-- `atlas-clipper-1.6.2-chrome.zip` (~4 MB) — Chrome / Edge / Brave / cualquier Chromium
-- `atlas-clipper-1.6.2-firefox.zip`
-- `atlas-clipper-1.6.2-safari.zip`
-
-Si todavía no existen, generalos con:
-
-```bash
-bash assets/clipper/build.sh
-```
-
-Tarda ~2 minutos (clona upstream pinned a `1.6.2`, aplica patch, buildea webpack × 3).
+- 🌐 **Chrome / Edge / Brave** → [atlas-clipper-1.6.2-chrome.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-chrome.zip)
+- 🦊 **Firefox** → [atlas-clipper-1.6.2-firefox.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-firefox.zip)
+- 🧭 **Safari** → [atlas-clipper-1.6.2-safari.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-safari.zip)
 
 ### Quickstart Chrome
 
-1. Descomprimí `atlas-clipper-1.6.2-chrome.zip` a una carpeta estable
+1. Descargá el `.zip`, descomprimilo a una carpeta estable
 2. `chrome://extensions` → activá Developer Mode → "Load unpacked" → seleccioná la carpeta
-3. Click en el ícono Atlas (violeta) en la toolbar → Settings → seteá tu vault
+3. Click en el ícono Atlas (violeta) en la toolbar → Settings → seteá tu vault Obsidian
 4. Clipeá una página → el `.md` aparece en `<vault>/atlas-pool/`
 
 ### Cierra el loop
@@ -307,6 +294,16 @@ Una vez que el clip está en `atlas-pool`, lo inyectás a Engram para que Claude
 ```
 
 A partir de ahí, cualquier pregunta a Claude que toque ese tema lo encuentra solo via `mem_search`.
+
+### ¿Querés buildear el clipper vos mismo?
+
+Opcional — solo si querés cambiar el ícono o bumpear el upstream tag:
+
+```bash
+bash assets/clipper/build.sh
+```
+
+Tarda ~2 minutos (clona upstream pinned a `1.6.2`, aplica patch, buildea webpack × 3). Output en `assets/clipper/dist/` (gitignored).
 
 **Detalles completos** (Firefox, Safari, regenerar íconos, bump del upstream): [`assets/clipper/README.md`](./assets/clipper/README.md)
 
