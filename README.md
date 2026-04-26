@@ -286,6 +286,10 @@ Cuatro jobs corren en cada push y PR a `main`:
 - **bash-syntax**: `bash -n` sobre todos los `.sh`.
 - **version-sync**: chequea que `VERSION` y `plugin.json#version` no estén desincronizados.
 
+### CI failure alerts
+
+Si algún job de CI falla en push a `main`, el workflow `ci-alerts.yml` auto-crea (o comenta sobre la existente) una issue con label `ci-failure`. Notificación al maintainer vía GitHub. Idempotente por commit SHA: re-runs del mismo SHA agregan comentario, no duplican issue. Issues NO se auto-cierran al fixearse — cerrá manualmente como audit trail. PR failures NO disparan alerta (ya son visibles en la UI del PR).
+
 ### shellcheck pin policy
 
 El action `ludeeus/action-shellcheck` se pinea a SHA exacto (no tag). Razón: prevenir upgrades silenciosos del action o de la versión de shellcheck que ese action incluye internamente.

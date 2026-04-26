@@ -1,0 +1,60 @@
+name: ci-alerts
+
+on:
+  workflow_run:
+    workflows: ["ci"]  # must match the `name:` of ci.yml
+    types: [completed]
+    branches: [main]
+
+permissions:
+  issues: write
+  contents: read
+  actions: read
+
+jobs:
+  alert-on-failure:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check existing issue and create or comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          COMMIT_MSG: ${{ github.event.workflow_run.head_commit.message }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+
+          # Get failed job names
+          FAILED_JOBS=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
+
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          ISSUE_TITLE="CI failed on main: $SHORT_SHA"
+
+          # Check for existing open issue with same SHA in title
+          EXISTING=$(gh issue list \
+            --repo "$REPO" \
+            --label "ci-failure" \
+            --state open \
+            --search "$SHORT_SHA in:title" \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [[ -n "$EXISTING" ]]; then
+            echo "Existing issue #$EXISTING for $SHORT_SHA — adding comment"
+            gh issue comment "$EXISTING" \
+              --repo "$REPO" \
+              --body "Re-failed: $RUN_URL"
+          else
+            echo "Creating new issue for $SHORT_SHA"
+            BODY=$(printf '## CI Failure on `main`\n\n**Commit**: `%s`\n**Message**: %s\n**Failed jobs**: %s\n**Run**: %s\n\nThis issue was auto-created by `.github/workflows/ci-alerts.yml`. Close it after fixing the failure (re-run that goes green will NOT auto-close — manual close required as audit trail).\n' \
+              "$COMMIT_SHA" "$COMMIT_MSG" "$FAILED_JOBS" "$RUN_URL")
+            gh issue create \
+              --repo "$REPO" \
+              --title "$ISSUE_TITLE" \
+              --body "$BODY" \
+              --label "ci-failure"
+          fi
