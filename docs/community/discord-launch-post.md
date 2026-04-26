@@ -1,7 +1,3 @@
-<!-- TODO: confirmar owner real del repo atlas-for-engram antes de publicar.
-     git remote y README apuntan a "Kirilgitlsiiejah" pero el nombre parece typo.
-     Reemplazar <OWNER> abajo cuando esté confirmado. -->
-
 # 🏛️ Atlas-for-Engram — la memoria infinita para Claude que vive en tu Obsidian
 
 ## ¿Qué es esto?
@@ -20,30 +16,31 @@ Imaginate que estás leyendo un artículo de 30 minutos sobre WebSockets. Lo cer
 
 ## Cómo se instala
 
-```bash
-# 1. Instalar el plugin desde Claude Code
-/plugin install atlas@github:<OWNER>/atlas-for-engram
-```
+**1.** Instalá el plugin desde Claude Code:
 
 ```bash
-# 2. Cloná el repo y descomprimí el clipper
-git clone https://github.com/<OWNER>/atlas-for-engram
-unzip atlas-for-engram/assets/clipper/dist/atlas-clipper-1.6.2-chrome.zip -d ~/atlas-clipper/
+/plugin install atlas@github:Kirilgitlsiiejah/atlas-for-engram
 ```
 
+**2.** Descargá el clipper para tu browser desde la [release v0.2.0](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/tag/v0.2.0) y descomprimilo a una carpeta estable:
+
+- Chrome / Edge / Brave: [atlas-clipper-1.6.2-chrome.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-chrome.zip)
+- Firefox: [atlas-clipper-1.6.2-firefox.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-firefox.zip)
+- Safari: [atlas-clipper-1.6.2-safari.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-safari.zip)
+
+**3.** Cargá la extensión en Chrome:
+
 ```
-# 3. Cargá la extensión en Chrome
-# chrome://extensions → Developer Mode ON → Load unpacked → seleccioná ~/atlas-clipper/
+# chrome://extensions → Developer Mode ON → Load unpacked → seleccioná la carpeta descomprimida
 ```
+
+**4.** Listo — clipeá tu primera página:
 
 ```bash
-# 4. Listo — clipeá tu primera página
 # Click en el ícono Atlas (violeta) en la toolbar → Save to Obsidian → confirmar
 # Después en Claude:
 /atlas:inject-atlas <tu-proyecto> <slug-del-clip>
 ```
-
-> ⚠️ Verificá el owner real del repo en el README antes de copiar los comandos — todavía no lo tengo confirmado al 100%.
 
 ## 3 ejemplos de uso
 
@@ -53,6 +50,6 @@ unzip atlas-for-engram/assets/clipper/dist/atlas-clipper-1.6.2-chrome.zip -d ~/a
 
 ## Links
 
-- Repo: `https://github.com/<OWNER>/atlas-for-engram`
-- Releases: `https://github.com/<OWNER>/atlas-for-engram/releases`
+- Repo: https://github.com/Kirilgitlsiiejah/atlas-for-engram
+- Releases: https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases
 - Engram (la memoria daemon): https://github.com/Gentleman-Programming/engram
