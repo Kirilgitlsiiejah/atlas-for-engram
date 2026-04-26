@@ -24,3 +24,6 @@ __pycache__/
 .env
 .env.local
 *.pem
+
+# Local clipper build workspace (zips live on GitHub Releases)
+assets/clipper/
