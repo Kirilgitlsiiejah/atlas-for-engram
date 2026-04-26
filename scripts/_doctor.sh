@@ -65,6 +65,67 @@ if [[ -f "$HOME/.claude/settings.json" ]] && command -v jq >/dev/null 2>&1; then
     && WARNINGS+=("legacy hook in ~/.claude/settings.json — remove to avoid double-fire")
 fi
 
+# ── Inline-fallback drift detector ───────────────────────────────────────────
+# Compares sha1 of the inline detect_vault() function body across the 4 consumer
+# scripts.  Opportunistic: skips silently on any extraction or hashing failure
+# so SessionStart is NEVER blocked.
+_doctor_check_drift() {
+  local sha_cmd=""
+  if command -v sha1sum >/dev/null 2>&1; then
+    sha_cmd="sha1sum"
+  elif command -v openssl >/dev/null 2>&1; then
+    sha_cmd="openssl_dgst"   # handled below
+  elif command -v md5sum >/dev/null 2>&1; then
+    sha_cmd="md5sum"
+  else
+    return 0  # no hashing tool available — skip silently
+  fi
+
+  local skills_root="${SCRIPT_DIR}/../skills"
+  local consumers=(
+    "${skills_root}/atlas-cleanup/cleanup.sh"
+    "${skills_root}/atlas-lookup/lookup.sh"
+    "${skills_root}/atlas-delete/delete.sh"
+    "${skills_root}/atlas-index/generate.sh"
+  )
+
+  local ref_hash="" ref_file="" cur_hash="" f
+  for f in "${consumers[@]}"; do
+    [[ -f "$f" ]] || return 0  # file missing — skip silently
+
+    # Extract the detect_vault() function body via awk.
+    # Matches "  detect_vault() {" (2-space indent, as it sits inside the else branch)
+    # through the first "  }" on its own line at the same indent level.
+    local block
+    block=$(awk '
+      /^  detect_vault\(\) \{$/ { found=1 }
+      found { print }
+      found && /^  \}$/ { found=0; exit }
+    ' "$f" 2>/dev/null) || return 0
+    [[ -z "$block" ]] && return 0  # extraction failed — skip silently
+
+    if [[ "$sha_cmd" == "sha1sum" ]]; then
+      cur_hash=$(printf '%s' "$block" | sha1sum 2>/dev/null | awk '{print $1}') || return 0
+    elif [[ "$sha_cmd" == "openssl_dgst" ]]; then
+      cur_hash=$(printf '%s' "$block" | openssl dgst -sha1 2>/dev/null | awk '{print $NF}') || return 0
+    else
+      cur_hash=$(printf '%s' "$block" | md5sum 2>/dev/null | awk '{print $1}') || return 0
+    fi
+    [[ -z "$cur_hash" ]] && return 0
+
+    if [[ -z "$ref_hash" ]]; then
+      ref_hash="$cur_hash"
+      ref_file="$f"
+    elif [[ "$cur_hash" != "$ref_hash" ]]; then
+      local short_f short_ref
+      short_f=$(basename "$(dirname "$f")")/$(basename "$f")
+      short_ref=$(basename "$(dirname "$ref_file")")/$(basename "$ref_file")
+      WARNINGS+=("drift detected: inline fallback in ${short_f} diverges from ${short_ref} — refactor of detect_vault not propagated")
+    fi
+  done
+}
+_doctor_check_drift 2>/dev/null || true
+
 # Always include the vault resolution line in stdout so the user can see
 # which branch was taken even when nothing else is wrong (REQ-OBS-1).
 # If the resolution returned an empty path (regression / detect_vault broken),
