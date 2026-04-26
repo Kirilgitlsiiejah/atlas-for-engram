@@ -6,7 +6,3 @@
 # walk-up); shellcheck cannot resolve them statically. Disabling globally avoids
 # redundant `# shellcheck source=/dev/null` directives in every consumer script.
 disable=SC1090,SC1091
-
-# Note: per-path exclusions (e.g. install.sh) live in `.github/workflows/ci.yml`
-# under `ludeeus/action-shellcheck`'s `ignore_names`, since `.shellcheckrc` does
-# not support a global ignore-paths directive.

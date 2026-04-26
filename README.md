@@ -266,8 +266,6 @@ Cuando el doctor cae a L5 y el path no existe, agrega una pista de remediación:
 
 **atlas-pool not found**: create it (`mkdir -p $HOME/vault/atlas-pool`) and point your Web Clipper output there. Override the parent with `ATLAS_VAULT=/path/to/vault` (or set up walk-up by placing a `.atlas-pool` empty file at the vault root — see [Vault Resolution](#vault-resolution)).
 
-**legacy hook detected (double-fire)**: you installed via `bash install.sh` previously and switched to the native plugin. Open `~/.claude/settings.json`, remove the `PostToolUse` entry whose `command` matches `.claude/skills/compare-with-atlas`, save. The native plugin's `hooks/hooks.json` covers it.
-
 ---
 
 ## Compatibility
