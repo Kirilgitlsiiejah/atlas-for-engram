@@ -5,3 +5,22 @@
 Thumbs.db
 node_modules/
 *.log
+
+# Internal orchestrator / sub-agent caches
+.atl/
+
+# Local Claude Code state (per-machine)
+.claude/
+
+# IDE configs (per-developer, not project-wide)
+.idea/
+.vscode/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Local env / secrets (defensive)
+.env
+.env.local
+*.pem
