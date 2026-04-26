@@ -1,45 +1,49 @@
-# 🏛️ Atlas-for-engram — la memoria infinita que vive en tu Obsidian
+# 🏛️ Atlas para engram — convertí tu Obsidian en una extensión de tu memoria persistente
 
-Claude se olvida de todo entre sesiones. Cada conversación arranca de cero. ¿Cuántas veces le re-explicaste el mismo paper, el mismo artículo, el mismo tutorial que leíste el lunes? Ya está. Se terminó.
+Engram te da memoria persistente. Atlas la extiende al browser. Todo lo que clipeás de la web entra a tu engram como observaciones `type=atlas`, scoped al proyecto que estés laburando, queryable junto con tu trabajo. Tu lectura web, indexada con tu memoria de Claude.
 
-**Inyectá lo que quieras a la memoria de tu proyecto en engram.** Todo lo que clipeás de la web, todo lo que leés, todo lo que aprendés — Claude lo recuerda para siempre y lo cita solo cuando es relevante. Tu cerebro, externalizado. Tu memoria, tu proyecto, lo que vos quieras, persistente para siempre.
+## ¿Qué hace atlas, exactamente?
 
-## ¿Cómo funciona?
+- **Web Clipper brandeado** que escribe los clips directo a tu vault de Obsidian, en una carpeta `atlas-pool/`. Markdown plano, frontmatter con `source_url`, listo para inyectar.
+- **Skills que conectan ese pool con engram**: inyectar un clip como `type=atlas`, lookup de URLs, generar índice navegable, integrity checks, edit y delete in-place.
+- **Hook automático post-search**: cada vez que Claude busca en tu engram, separa silenciosamente "tu trabajo" (decisions, bugfixes, discoveries) de "lo que clipeaste" (atlas). Ves de un vistazo qué es tuyo y qué es lectura.
+- **Catálogo `Atlas-Index.md` auto-generado** en la raíz del vault, agrupado por dominio fuente. Navegás tu atlas como navegás tu vault.
+- **Vault auto-detectado** por walk-up desde el cwd. Cero config, cero paths hardcoded.
+- **Doctor por sesión** que valida estado del plugin, engram corriendo y vault accesible antes de que algo falle silencioso.
 
-Mientras navegás, clipeás cualquier página con el Atlas Web Clipper y se guarda como markdown plano en tu vault de Obsidian, en una carpeta `atlas-pool/`. Después le decís a Claude algo como *"agregá esto a la memoria del proyecto X"* y se inyecta solo a engram. La próxima vez que le preguntes algo relacionado, lo cita sin que vos tengas que mandarle nada. Hablás natural, él dispara las skills cuando detecta lo que querés.
+## Setup — asumiendo que ya tenés engram corriendo
 
-## Setup — 4 ingredientes, una sola vez
+Si ya tenés engram funcionando, sumarle atlas son 5 minutos. Necesitás 3 cosas más:
 
-**1. Obsidian** — Si no lo tenés, [bajalo acá](https://obsidian.md/). Cualquier vault sirve, atlas detecta el tuyo solo.
+**1. Obsidian** — cualquier vault, atlas lo detecta solo. Si no lo tenés: https://obsidian.md
 
-**2. Atlas Web Clipper** — el clipper brandeado, descargá el zip para tu browser:
+**2. Atlas Web Clipper** — bajá el zip de tu browser, descomprimí, y `Load unpacked` desde `chrome://extensions` (Developer Mode prendido):
 - Chrome / Edge / Brave: [atlas-clipper-1.6.2-chrome.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-chrome.zip)
 - Firefox: [atlas-clipper-1.6.2-firefox.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-firefox.zip)
 - Safari: [atlas-clipper-1.6.2-safari.zip](https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/download/v0.2.0/atlas-clipper-1.6.2-safari.zip)
 
-Descomprimí el zip a una carpeta estable, andá a `chrome://extensions`, prendé Developer Mode, click en "Load unpacked", seleccioná la carpeta. Listo.
-
-**3. Engram** — el daemon de memoria persistente. Lo bajás de [acá](https://github.com/Gentleman-Programming/engram) y lo dejás corriendo de fondo.
-
-**4. El plugin** — una sola vez, dentro de Claude Code:
+**3. El plugin atlas-for-engram** — una vez, dentro de Claude Code:
 
 ```
 /plugin install atlas@github:Kirilgitlsiiejah/atlas-for-engram
 ```
 
-## De ahí en más, 0 comandos 🚀
+## Cómo se usa — hablás natural, las skills se disparan solas
 
-No tenés que aprender ninguna sintaxis nueva. No hay comandos para memorizar, ni flags raras, ni nombres de skills. Vos hablás con Claude como hablás siempre, y él dispara las skills cuando detecta que querés inyectar algo, buscar en tu atlas, o consultar lo que clipeaste hace tres semanas.
+- **Clip + inject** (`inject-atlas`): clipeás un paper desde el browser y le decís *"agregá esto al atlas del proyecto auth-rewrite"*. Queda en engram como `type=atlas`, scoped al proyecto, con `source_url` y slug.
+- **Lookup** (`atlas-lookup`): *"¿tengo atlas de esta URL?"* — te dice si ya lo clipeaste, en qué proyecto vive, si está injectado en engram, o si está sin injectar todavía. Cuatro escenarios cubiertos.
+- **Atlas-Index** (`atlas-index`): *"generame el atlas index del proyecto auth-rewrite"* — escribe `Atlas-Index.md` en la raíz del vault, agrupado por dominio, con links a los raws.
+- **Auto-comparación** (`compare-with-atlas`): cuando le preguntás algo a Claude, busca en engram y separa los hits entre "tus decisiones/discoveries" y "lo que clipeaste de la web". Sin que se lo pidas.
+- **Cleanup** (`atlas-cleanup`): *"corré integrity check del atlas"* — reporta orphans (engram sin raw), dangling (raw sin inject), duplicados (misma URL en varios proyectos), malformed.
+- **Edit y delete** (`atlas-edit`, `atlas-delete`): *"editá el atlas de esa URL, cambiá el título y re-inyectá"* o *"borrá todos los atlas del dominio X del proyecto Y"*. In-place, bulk si querés.
 
-## 3 ejemplos reales
+## Por qué importa
 
-- **Investigación**: clipeás 10 papers sobre WebSockets durante la semana. El viernes le preguntás *"¿qué patrones aparecen sobre reconnection?"* — los conoce todos, sin copy-paste, sin pegar links.
-- **Aprendizaje**: cada tutorial que leés queda guardado. Empezás un proyecto nuevo y Claude ya sabe lo que aprendiste el mes pasado, sin que se lo cuentes de nuevo.
-- **Code snippets**: clipeás una respuesta de StackOverflow hoy. Mañana le preguntás algo parecido y la cita sin que se la pegues otra vez.
+Tu engram + atlas = todo tu trabajo + todo lo que leés, en un solo lugar consultable. Inyectás lo que querés, y Claude lo encuentra cuando es relevante — sin que vos te acuerdes de pegarle el link de nuevo. La web que consumís deja de ser efímera y pasa a ser parte de tu memoria, separada por proyectos, comparable contra tus decisions.
 
 ## Links
 
 - Repo: https://github.com/Kirilgitlsiiejah/atlas-for-engram
-- Última release: https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/latest
-- Engram (la memoria daemon): https://github.com/Gentleman-Programming/engram
+- Releases (zips del clipper): https://github.com/Kirilgitlsiiejah/atlas-for-engram/releases/latest
+- Engram: https://github.com/Gentleman-Programming/engram
 - Obsidian: https://obsidian.md
