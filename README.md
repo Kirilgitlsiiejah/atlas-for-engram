@@ -266,6 +266,52 @@ Cuando el doctor cae a L5 y el path no existe, agrega remediation hint:
 
 ---
 
+## Obsidian Web Clipper brandeado
+
+Atlas-for-engram incluye una versión brandeada del [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) oficial, con dos overrides minimal:
+
+- **Default folder** = `atlas-pool` (en vez de `Clippings` upstream)
+- **Ícono Atlas** en la toolbar del browser
+
+Todo lo demás sigue al upstream — settings, templates, behavior. Es un patch, no un rebrand.
+
+### Builds prearmados
+
+Los `.zip` para los 3 browsers viven en `assets/clipper/dist/` (gitignored — se generan localmente, no se commitean):
+
+- `atlas-clipper-1.6.2-chrome.zip` (~4 MB) — Chrome / Edge / Brave / cualquier Chromium
+- `atlas-clipper-1.6.2-firefox.zip`
+- `atlas-clipper-1.6.2-safari.zip`
+
+Si todavía no existen, generalos con:
+
+```bash
+bash assets/clipper/build.sh
+```
+
+Tarda ~2 minutos (clona upstream pinned a `1.6.2`, aplica patch, buildea webpack × 3).
+
+### Quickstart Chrome
+
+1. Descomprimí `atlas-clipper-1.6.2-chrome.zip` a una carpeta estable
+2. `chrome://extensions` → activá Developer Mode → "Load unpacked" → seleccioná la carpeta
+3. Click en el ícono Atlas (violeta) en la toolbar → Settings → seteá tu vault
+4. Clipeá una página → el `.md` aparece en `<vault>/atlas-pool/`
+
+### Cierra el loop
+
+Una vez que el clip está en `atlas-pool`, lo inyectás a Engram para que Claude lo recuerde:
+
+```
+/atlas:inject-atlas <tu-proyecto> <slug-del-clip>
+```
+
+A partir de ahí, cualquier pregunta a Claude que toque ese tema lo encuentra solo via `mem_search`.
+
+**Detalles completos** (Firefox, Safari, regenerar íconos, bump del upstream): [`assets/clipper/README.md`](./assets/clipper/README.md)
+
+---
+
 ## Configuración
 
 | Env var | Default | Propósito |
