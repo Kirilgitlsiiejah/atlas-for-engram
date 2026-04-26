@@ -4,7 +4,7 @@
 
 <h1>atlas-for-engram</h1>
 
-<p><strong>Curated external knowledge para tu memory layer — companion plugin para <a href="https://github.com/Gentleman-Programming/engram">engram</a>.</strong></p>
+<p><strong>La capa de conocimiento externo curado para tu memoria persistente — companion plugin de <a href="https://github.com/Gentleman-Programming/engram">engram</a>.</strong></p>
 
 <p>
 <a href="https://github.com/Kirilgitlsiiejah/atlas-for-engram/actions/workflows/ci.yml"><img src="https://github.com/Kirilgitlsiiejah/atlas-for-engram/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -18,75 +18,103 @@
 
 ---
 
-## Qué hace
+## ¿Qué hace?
 
-- **Clipear web → engram**: chupa los `.md` que tu Obsidian Web Clipper deja en `atlas-pool/` y los guarda en engram como `type=atlas`, scoped al proyecto donde estás parado.
-- **Búsqueda separada**: cada `mem_search` se auto-divide en `own_work` (tus decisiones, bugs, sesiones) vs `atlas` (clips externos) — sin tocar nada vos.
-- **Vault auto-detect cross-platform**: cascade de 5 niveles resuelve el vault solo. Funciona en macOS, Linux y Windows Git Bash sin config.
+Atlas convierte cualquier artículo, paper o blog post que clipeás desde el navegador en **memoria persistente que Claude consulta solo**. Vos clipeás con un click, le decís a Claude *"agregá esto al proyecto X"* y listo — la próxima vez que le preguntes algo relacionado, lo encuentra y lo cita.
 
----
-
-## Por qué importa
-
-engram guarda **tu propio trabajo** (decisiones, bugs, conventions) excelente, pero no tiene un lugar de primera para **conocimiento externo curado** (artículos, papers, blog posts). Si los mezclás como observaciones normales, tu `mem_search` se ensucia y perdés la línea entre "lo que decidí yo" vs "lo que leí afuera".
-
-Atlas resuelve eso con tres decisiones:
-
-1. **`type=atlas` + `source_url` mandatory** → proveniencia trazable.
-2. **PostToolUse hook `compare-with-atlas`** → cada `mem_search` viene pre-segmentado.
-3. **Cross-vault dedup** → mismo URL clipeado dos veces no duplica; `atlas-cleanup` lo reporta.
+Atlas-for-engram **lee** los `.md` que el Web Clipper deja en `atlas-pool/` y los carga en engram como observaciones `type=atlas`, asociadas al proyecto sobre el que estés conversando. No hay comandos que recordar — todo es conversación natural con Claude.
 
 ---
 
-## Quickstart (5 minutos)
+## ¿Por qué importa?
 
-### 1. Instalá
+Te pasó esto: leés un paper buenísimo sobre arquitectura hexagonal, lo guardás en Obsidian, y dos semanas después estás laburando con Claude y le tenés que **re-explicar todo de cero** porque él no sabe qué leíste. Cada conversación arranca con un Claude amnésico.
+
+engram resolvió la mitad: ahora **tu propio trabajo** (decisiones, bugs, convenciones) sobrevive entre sesiones. Pero el conocimiento externo que vos curás — los artículos que te cambiaron la cabeza, los papers que querés que Claude considere — seguía afuera del loop.
+
+Atlas cierra ese hueco con tres decisiones simples:
+
+1. **`type=atlas` + `source_url` mandatory** → siempre sabés de dónde vino cada cosa.
+2. **Búsqueda auto-segmentada** → cuando Claude busca algo, separa solo "lo que decidiste vos" de "lo que leíste afuera".
+3. **Dedup cross-vault** → el mismo URL clipeado dos veces no se duplica.
+
+---
+
+## Los 4 ingredientes que necesitás
+
+Atlas vive en la intersección de cuatro herramientas. Las instalás **una vez** y después no las tocás más.
+
+### 1. Obsidian
+
+Cualquier vault tuyo sirve — atlas-for-engram detecta el tuyo solo (mirá [Vault Resolution](#vault-resolution) más abajo si querés saber el detalle). Si todavía no usás Obsidian, descargálo de [obsidian.md](https://obsidian.md). Si ya lo usás, no cambia nada.
+
+### 2. Atlas Web Clipper (zip brandeado)
+
+Es el [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) oficial pero con el ícono Atlas y default folder `atlas-pool` (en vez de `Clippings`). Lo descargás como zip desde Releases, descomprimís, y hacés "Load unpacked" en tu browser. Detalle completo más abajo en la sección del [Clipper brandeado](#obsidian-web-clipper-brandeado).
+
+### 3. Engram
+
+Es el daemon de memoria persistente — sin él, Atlas no tiene dónde guardar nada. Instalación + setup en el [repo de engram](https://github.com/Gentleman-Programming/engram). Una vez corriendo escucha en `http://127.0.0.1:7437` por default.
+
+### 4. El plugin atlas-for-engram
+
+Una sola vez al principio, instalás el plugin desde el marketplace de Claude Code apuntando a `Kirilgitlsiiejah/atlas-for-engram`:
 
 ```bash
-claude plugin marketplace add Kirilgitlsiiejah/atlas-for-engram && claude plugin install atlas@atlas-for-engram
+/plugin install atlas@github:Kirilgitlsiiejah/atlas-for-engram
 ```
 
-El marketplace apunta al `.claude-plugin/marketplace.json` de este repo. Claude Code resuelve skills, hooks y scripts desde `${CLAUDE_PLUGIN_ROOT}` automáticamente — cero copies manuales, cero edits a `settings.json`.
+De ahí en más, **no lo invocás directo** — vive embebido en cada conversación con Claude. Skills, hooks y scripts se resuelven solos desde `${CLAUDE_PLUGIN_ROOT}`. Cero copies manuales, cero edits a `settings.json`.
 
-Updates posteriores:
+---
 
-```bash
-claude plugin update atlas@atlas-for-engram
-```
+## ¿Y después?
 
-### 2. Setup mínimo
+Después, **no hay comandos**. Todo es conversación natural con Claude.
 
-El SessionStart doctor corre en cada sesión y te dice qué falta. Setup típico la primera vez:
+Le decís lo que querés en español — *"agregá esto al engram del proyecto dev"*, *"tenés algo sobre WebSockets clipeado?"*, *"mostrame el atlas index"* — y Claude dispara el skill correcto detrás de escena. El plugin existe para que Claude **entienda lo que querés decir** sin que vos tengas que aprender una sintaxis nueva.
 
-```bash
-# Crea el atlas-pool dentro de tu vault Obsidian
-mkdir -p ~/vault/atlas-pool
+---
 
-# (opcional, recomendado) markeá la raíz del vault para auto-detect zero-config
-touch ~/vault/.atlas-pool
-```
+## Ejemplos de uso real
 
-Configurá tu Obsidian Web Clipper para escribir los clips a `atlas-pool/`. Eso es todo.
+Estas son cosas que le decís a Claude tal cual, en lenguaje natural. El plugin se encarga del resto.
 
-### 3. Primer clip
+### Inyectar un clip al engram
 
-Después de clipear un blog post a `~/vault/atlas-pool/hexagonal-architecture.md`, en Claude Code:
+> *"agregá al proyecto dev lo que clipeé sobre arquitectura hexagonal"*
 
-```
-inyectá al proyecto dev la info de hexagonal-architecture
-```
+Claude busca el `.md` correspondiente en `atlas-pool/`, parsea el frontmatter (título, URL, tags), y lo carga en engram como `type=atlas`, asociado al proyecto que mencionaste. La próxima vez que le preguntes algo relacionado, lo encuentra y lo cita solo.
 
-El skill `inject-atlas` parsea el frontmatter, llama a `mem_save` con `type=atlas`, y regenera `Atlas-Index.md` en la raíz del vault.
+### Preguntar si ya tenés algo clipeado
 
-### 4. Primera búsqueda
+> *"tengo algo guardado sobre event sourcing?"*
 
-```
-mem_search hexagonal architecture
-```
+Claude busca cross-project por URL o por título y te dice qué proyectos lo tienen — útil cuando dudás si ya leíste un paper o no.
 
-El hook `compare-with-atlas` separa results en `own_work` vs `atlas` automáticamente. Vas a ver tus decisiones del proyecto y los clips externos en columnas distintas, con `source_url` visible para los atlas.
+### Editar un atlas existente
 
-Walkthroughs completos end-to-end: ver [EXAMPLES.md](EXAMPLES.md).
+> *"editá el atlas de hexagonal-architecture y agregale el tag 'ddd'"*
+
+Claude hace el PATCH a engram — sin que tengas que tocar el `.md` ni la API a mano.
+
+### Borrar un clip que ya no querés
+
+> *"borrá del engram el atlas de tal-blog-post"*
+
+Claude lo elimina de engram. Si querés que también borre el `.md` crudo de `atlas-pool/`, se lo decís y listo.
+
+### Ver el catálogo de todo lo que clipeaste
+
+> *"mostrame el atlas index del proyecto dev"*
+
+Claude regenera `Atlas-Index.md` en la raíz de tu vault, agrupado por dominio, con links clicables. Lo abrís en Obsidian y navegás visualmente.
+
+### Pedirle un health check
+
+> *"corré un integrity check del atlas"*
+
+Claude reporta orphans, dangling links, duplicates y atlas malformados — para que mantengas la cosa limpia.
 
 ---
 
@@ -97,107 +125,62 @@ Browser Web Clipper
         |
         v
    ${ATLAS_VAULT}/atlas-pool/<slug>.md  (raw markdown, sin proyecto)
-        |  inject-atlas (manual trigger)
+        |  vos le decís a Claude "inyectá esto al proyecto X"
         v
    engram type=atlas, project=<auto-detect desde git>
         |
         +--> Atlas-Index.md  (auto-regen en cada inject)
         |
-        +--> mem_search → compare-with-atlas hook → own_work vs atlas
+        +--> mem_search → separación auto own_work vs atlas
         |
         v
-   Browse / retrieve desde cualquier markdown editor o claude-code
+   Browse / retrieve desde Obsidian o Claude Code
 ```
 
 El plugin vive bajo `${CLAUDE_PLUGIN_ROOT}` post-install: hooks, scripts (`_helpers.sh`, `_doctor.sh`, `session-start.sh`) y los 7 skills bajo `skills/`.
 
-**Project resolution**: mismo algoritmo que engram core — git remote → git root basename → cwd basename → fallback `dev`. Override pasando `project` explícito.
+**Project resolution**: mismo algoritmo que engram core — git remote → git root basename → cwd basename → fallback `dev`.
 
 ---
 
-## Skills
+## Skills disponibles
 
-7 skills + 1 hook auto-fired:
+Son 7 skills + 1 hook. No los invocás vos — Claude los dispara solo cuando interpretás lo que pediste. Esta tabla es referencia para que entiendas qué frase activa qué cosa.
 
-| Skill | Trigger | Qué hace |
+| Skill | Frase típica | Qué hace |
 |---|---|---|
-| `inject-atlas` | "inyectá al proyecto X la info de Y" | **CREATE** — parsea atlas-pool .md y guarda a engram como `type=atlas` |
-| `atlas-edit` | "editá el atlas X" | **UPDATE** — PATCH `/observations/{id}` con field=value pairs |
-| `atlas-delete` | "borrá el atlas X" | **DELETE** — individual + bulk + opcional cleanup del .md crudo |
-| `atlas-lookup` | "tengo atlas de URL X?" | **READ** — búsqueda cross-project por URL |
-| `atlas-cleanup` | "atlas integrity check" | **INTEGRITY** — orphans / dangling / duplicates / malformed report |
-| `atlas-index` | "atlas index" | **BROWSE** — regenera `Atlas-Index.md` en raíz del vault |
-| `compare-with-atlas` | auto via PostToolUse hook | **READ** — separa own_work vs atlas results en cada `mem_search` |
+| `inject-atlas` | *"agregá X al engram del proyecto Y"* | **CREATE** — parsea el `.md` de `atlas-pool/` y lo guarda en engram como `type=atlas` |
+| `atlas-edit` | *"editá el atlas X y cambiale Z"* | **UPDATE** — patchea la observación en engram con los campos nuevos |
+| `atlas-delete` | *"borrá el atlas X"* | **DELETE** — individual o bulk, con opción de borrar también el `.md` crudo |
+| `atlas-lookup` | *"tengo atlas de tal URL?"* | **READ** — búsqueda cross-project por URL o título |
+| `atlas-cleanup` | *"corré integrity check"* | **INTEGRITY** — reporta orphans, dangling, duplicates, malformed |
+| `atlas-index` | *"mostrame el atlas index"* | **BROWSE** — regenera `Atlas-Index.md` en la raíz del vault |
+| `compare-with-atlas` | (auto, no lo invocás) | **READ** — separa results de cada búsqueda en `own_work` vs `atlas` |
 
 > **Nota**: este es un plugin **community / companion** para [engram](https://github.com/Gentleman-Programming/engram). Integra con la HTTP API de engram y sigue las conventions de plugins claude-code, pero **no está oficialmente afiliado, endorsed ni mantenido por el proyecto engram**.
 
 ---
 
-## Auto-separación de búsqueda (PostToolUse hook)
+## Auto-separación de búsqueda
 
-Cada `mem_search` se divide automáticamente en dos buckets: **own_work** (tus decisiones, bugs, sesiones) y **atlas** (clips, papers, references). El hook fira después de cada search, lee el JSON tool_response por stdin, y emite `additionalContext` con proveniencia. Silent si no hay results atlas.
+Cuando le pedís a Claude que busque algo en su memoria, los resultados se dividen automáticamente en dos baldes: **own_work** (tus decisiones, bugs, sesiones de laburo) y **atlas** (clips externos, papers, references). Vos no hacés nada — un PostToolUse hook se dispara después de cada búsqueda, lee el resultado, y lo emite ya segmentado con `source_url` visible para los atlas. Si no hay results atlas, el hook queda silent.
 
-Matcher: `mcp__plugin_engram_engram__mem_search`. Registrado en `hooks/hooks.json`.
-
----
-
-## SessionStart doctor (self-check)
-
-Cada sesión y cada `/clear` corre `scripts/_doctor.sh` con timeout de 3s. Nunca bloquea la sesión (exit `0` siempre). **6 checks**:
-
-1. **engram reachable** — `GET ${ENGRAM_HOST}/health`
-2. **deps present** — `jq`, `curl`, `rg`, `fd` en PATH
-3. **vault resolution report** — reporta el nivel resuelto (L1..L5) y path, así sabés qué branch del cascade ganó
-4. **L5-fallback missing** — si cae a `$HOME/vault` y no existe, da remediation hint
-5. **vault layout** — `<resolved-vault>/atlas-pool/` existe
-6. **drift detector** — warne si los inline `detect_vault` blocks divergen del canonical en `scripts/_helpers.sh` (previene legacy logic dormido)
-
-Run manual: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/_doctor.sh`.
+Esto significa que cuando Claude te responde, **siempre sabés** si una afirmación viene de algo que vos decidiste o de algo que clipeaste leyendo afuera.
 
 ---
 
-## Vault Resolution
+## SessionStart doctor (corre solo)
 
-Cada skill que toca el `atlas-pool/` resuelve el vault por una **cascada de 5 niveles**. Gana el primero que matchea — los demás se ignoran.
+Cada vez que abrís una sesión nueva o hacés `/clear`, el doctor corre solo en background con timeout de 3s. Nunca bloquea tu sesión. Te avisa si algo está roto y cómo arreglarlo. **6 checks**:
 
-| Nivel | Fuente                                          | Cuándo usarlo                          |
-|-------|-------------------------------------------------|-----------------------------------------|
-| **L1** | flag `--vault <path>` pasado al script         | Override puntual sin ensuciar env vars |
-| **L2** | env var `$ATLAS_VAULT`                          | Default canónico para tu shell         |
-| **L3** | env var `$VAULT_ROOT` (**legacy, deprecated**)  | Compat con setups previos — migrá a `ATLAS_VAULT` |
-| **L4** | walk-up desde `$PWD` buscando un marker         | Working tree con vault auto-detectado  |
-| **L5** | fallback `$HOME/vault`                          | Si todo lo anterior falla              |
+1. **engram reachable** — verifica que el daemon esté arriba
+2. **deps present** — chequea que tengas `jq`, `curl`, `rg`, `fd` en PATH
+3. **vault resolution** — te dice qué nivel del cascade ganó (L1..L5) y qué path resolvió
+4. **L5-fallback missing** — si cae a `$HOME/vault` y no existe, te da remediation
+5. **vault layout** — verifica que `<vault>/atlas-pool/` exista
+6. **drift detector** — warne si los inline `detect_vault` blocks divergen del canonical en `scripts/_helpers.sh`
 
-Ejemplos copy-pasteables:
-
-```bash
-# L4 — auto-detect (recomendado, zero-config)
-cd ~/vault-obsidian
-atlas-cleanup --scan
-
-# L2 — override explícito por shell
-export ATLAS_VAULT=~/otro-vault
-atlas-lookup "hexagonal architecture"
-
-# L1 — flag CLI top priority (overridea todo)
-atlas-cleanup --vault=/tmp/test-vault
-```
-
-### Markers de walk-up (L4)
-
-El walk-up parte de `$PWD` y sube buscando `.obsidian/` (directorio nativo de Obsidian) o `.atlas-pool` (archivo vacío que creás con `touch .atlas-pool` en la raíz del vault).
-
-> **Importante**: `.atlas-pool` tiene que ser un **archivo**, no un directorio. Si existe como dir (confusión con la carpeta `atlas-pool/` que sí es dir), el walk-up lo **ignora** y sigue subiendo. Para automáticamente en `/`, drive roots (`C:/`, `/c`), UNC roots (`//host/share`), o tras 64 iteraciones.
-
-### Migración desde `VAULT_ROOT`
-
-`VAULT_ROOT` sigue respetado pero emite un warning one-shot por sesión. Migrá renombrando la export en tu shellrc:
-
-```bash
-export ATLAS_VAULT="$HOME/Documents/vault"
-```
-
-El doctor reporta el nivel resuelto cada sesión (`vault: L4 (walk-up .obsidian) -> /path`) — así sabés exactamente qué branch del cascade ganó.
+Si querés correrlo manual, le decís a Claude *"corré el atlas doctor"* y te tira el reporte.
 
 ---
 
@@ -231,42 +214,49 @@ Pre-buildeados, listos para `Load unpacked`:
 3. Click en el ícono Atlas (violeta) en la toolbar → Settings → seteá tu vault Obsidian
 4. Clipeá una página → el `.md` aparece en `<vault>/atlas-pool/`
 
-### Cierra el loop
+### Cerrá el loop
 
-Una vez que el clip está en `atlas-pool`, lo inyectás a Engram para que Claude lo recuerde:
+Una vez que el clip está en `atlas-pool/`, le decís a Claude *"agregá esto al engram del proyecto X"* y él se encarga del resto. A partir de ese momento, cualquier pregunta a Claude que toque ese tema lo encuentra solo.
 
-```
-/atlas:inject-atlas <tu-proyecto> <slug-del-clip>
-```
+---
 
-A partir de ahí, cualquier pregunta a Claude que toque ese tema lo encuentra solo via `mem_search`.
+## Vault Resolution
+
+Cada skill que toca el `atlas-pool/` resuelve el vault por una **cascada de 5 niveles**. Gana el primero que matchea — los demás se ignoran.
+
+| Nivel | Fuente                                          | Cuándo se aplica                       |
+|-------|-------------------------------------------------|-----------------------------------------|
+| **L1** | flag `--vault <path>` pasado al script         | Override puntual sin ensuciar env vars |
+| **L2** | env var `$ATLAS_VAULT`                          | Default canónico para tu shell         |
+| **L3** | env var `$VAULT_ROOT` (**legacy, deprecated**)  | Compat con setups previos — migrá a `ATLAS_VAULT` |
+| **L4** | walk-up desde `$PWD` buscando un marker         | Working tree con vault auto-detectado  |
+| **L5** | fallback `$HOME/vault`                          | Si todo lo anterior falla              |
+
+### Markers de walk-up (L4)
+
+El walk-up parte de `$PWD` y sube buscando `.obsidian/` (directorio nativo de Obsidian) o `.atlas-pool` (archivo vacío que creás con `touch .atlas-pool` en la raíz del vault).
+
+> **Importante**: `.atlas-pool` tiene que ser un **archivo**, no un directorio. Si existe como dir, el walk-up lo **ignora** y sigue subiendo. Para automáticamente en `/`, drive roots (`C:/`, `/c`), UNC roots (`//host/share`), o tras 64 iteraciones.
+
+El doctor reporta el nivel resuelto cada sesión (`vault: L4 (walk-up .obsidian) -> /path`) — así sabés exactamente qué branch del cascade ganó.
 
 ---
 
 ## Configuración
 
+Todas las env vars son **opcionales** — el cascade resuelve solo en la mayoría de los casos. Setealas solo si querés override explícito.
+
 | Env var | Default | Propósito |
 |---|---|---|
 | `ENGRAM_HOST` | `http://127.0.0.1:7437` | engram HTTP API URL |
 | `ENGRAM_PORT` | `7437` | shorthand si `HOST` no está set |
-| `ATLAS_VAULT` | (unset; cascade resuelve) | vault root canónico (parent de `atlas-pool/`). Reemplaza `VAULT_ROOT`. |
-| `VAULT_ROOT` | (unset; legacy) | **deprecated** — sigue respetado con warning one-shot. Migrá a `ATLAS_VAULT`. |
+| `ATLAS_VAULT` | (unset; cascade resuelve) | vault root canónico (parent de `atlas-pool/`) |
+| `VAULT_ROOT` | (unset; legacy) | **deprecated** — sigue respetado con warning. Migrá a `ATLAS_VAULT` |
 | `ATLAS_PROJECTS` | auto-detect | comma-separated list para `atlas-cleanup` cross-project scan |
 | `MOVE_RAW_AFTER_INJECT` | `false` | mové `.md` a `atlas-pool/injected/` después de inject |
 | `ATLAS_EDIT_CONFIRM_TYPE_CHANGE` | `false` | requiere `=yes` para cambiar type de una obs atlas |
 
----
-
-## CI
-
-Cuatro jobs corren en cada push y PR a `main`:
-
-- **shellcheck**: lintea bash via `ludeeus/action-shellcheck` pinned a SHA exacto (severity `warning`).
-- **validate-json**: `jq -e .` sobre `plugin.json`, `marketplace.json`, `hooks.json`.
-- **bash-syntax**: `bash -n` sobre todos los `.sh`.
-- **version-sync**: chequea que `VERSION` y `plugin.json#version` no estén desincronizados.
-
-Si algún job falla en push a `main`, el workflow `ci-alerts.yml` auto-crea (o comenta sobre la existente) una issue con label `ci-failure`. Idempotente por commit SHA. PR failures no disparan alerta (ya visibles en la UI del PR).
+Hooks y skills se registran solos al instalar el plugin — no tocás `settings.json` ni copiás nada a mano.
 
 ---
 
@@ -274,11 +264,11 @@ Si algún job falla en push a `main`, el workflow `ci-alerts.yml` auto-crea (o c
 
 **engram unreachable**: arrancá engram (`engram serve` o como lo corras) y re-chequeá con `curl -sf http://127.0.0.1:7437/health`. Override host con `ENGRAM_HOST=host:port`.
 
-**missing commands**: instalá lo que el doctor flagged. Windows Git Bash: scoop / chocolatey. macOS: `brew install jq curl ripgrep fd`. Linux: tu package manager (los nombres usuales son `jq curl ripgrep fd-find`).
+**missing commands**: instalá lo que el doctor flagged. Windows Git Bash: scoop / chocolatey. macOS: `brew install jq curl ripgrep fd`. Linux: `jq curl ripgrep fd-find` con tu package manager.
 
-**atlas-pool not found**: creá el dir (`mkdir -p $HOME/vault/atlas-pool`) y apuntá tu Web Clipper output ahí. Override el parent con `ATLAS_VAULT=/path/to/vault` (o setea walk-up poniendo un `.atlas-pool` empty file en la raíz del vault — ver [Vault Resolution](#vault-resolution)).
+**atlas-pool not found**: creá el dir (`mkdir -p $HOME/vault/atlas-pool`) y apuntá tu Web Clipper output ahí. Override el parent con `ATLAS_VAULT=/path/to/vault` (o dejá un `.atlas-pool` empty file en la raíz del vault para auto-detect).
 
-**vault detectado en lugar equivocado**: corré el doctor manual (`bash ${CLAUDE_PLUGIN_ROOT}/scripts/_doctor.sh`) — la línea `vault: L? (...) -> <path>` te dice exactamente qué branch del cascade ganó. Si es L5 y no querés esa default, exportá `$ATLAS_VAULT` o poné `.atlas-pool` marker en la raíz correcta.
+**vault detectado en lugar equivocado**: pedíle a Claude *"corré el atlas doctor"* — la línea `vault: L? (...) -> <path>` te dice exactamente qué branch del cascade ganó. Si es L5 y no querés esa default, exportá `$ATLAS_VAULT` o poné `.atlas-pool` marker en la raíz correcta.
 
 ---
 
@@ -297,7 +287,7 @@ Si algún job falla en push a `main`, el workflow `ci-alerts.yml` auto-crea (o c
 - [CONTRIBUTING.md](CONTRIBUTING.md) — bash conventions, commit format, SDD workflow
 - [EXAMPLES.md](EXAMPLES.md) — 3 walkthroughs end-to-end del workflow completo
 - [engram](https://github.com/Gentleman-Programming/engram) — proyecto core upstream
-- [Obsidian Web Clipper](https://obsidian.md/clipper) — extensión de browser para clipear
+- [Obsidian Web Clipper](https://obsidian.md/clipper) — extensión oficial de Obsidian (atlas-for-engram incluye un fork brandeado)
 
 ---
 
