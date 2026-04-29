@@ -267,19 +267,23 @@ detect_vault() {
 #          session via POST /sessions BEFORE invoking — discovered P0.4 smoke).
 # === BEGIN INLINE FALLBACK engram_post_observation ===
 engram_post_observation() {
-  local payload="${1:-}"
+  local payload="${1:-}" host="${ENGRAM_HOST:-127.0.0.1:7437}" attempt=0 max=3
   [[ -z "$payload" ]] && return 1
-  local host="${ENGRAM_HOST:-127.0.0.1:7437}"
-  local resp
-  resp=$(curl -sS --fail -m 10 -X POST \
-    -H 'Content-Type: application/json' \
-    -d "$payload" \
-    "http://${host}/observations" 2>/dev/null) || return 1
-  [[ -z "$resp" ]] && return 1
-  local obs_id
-  obs_id=$(printf '%s' "$resp" | jq -r '.id // empty' 2>/dev/null) || return 1
-  [[ -z "$obs_id" || "$obs_id" == "null" ]] && return 1
-  printf '%s' "$obs_id"
-  return 0
+  while [[ $attempt -lt $max ]]; do
+    local raw http body
+    raw=$(curl -sS -m 10 -w '\n%{http_code}' -X POST \
+      -H 'Content-Type: application/json' -d "$payload" \
+      "http://${host}/observations" 2>/dev/null) || { attempt=$((attempt+1)); sleep 0.2; continue; }
+    http="${raw##*$'\n'}"; body="${raw%$'\n'*}"
+    if [[ "$http" == "200" || "$http" == "201" ]]; then
+      local obs_id
+      obs_id=$(printf '%s' "$body" | jq -r '.id // empty' 2>/dev/null)
+      [[ -n "$obs_id" && "$obs_id" != "null" ]] && { printf '%s' "$obs_id"; return 0; }
+      return 1
+    fi
+    [[ "$http" =~ ^5 ]] || return 1
+    attempt=$((attempt+1)); sleep "0.$((1+attempt*2))"
+  done
+  return 1
 }
 # === END INLINE FALLBACK engram_post_observation ===
