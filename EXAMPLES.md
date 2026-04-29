@@ -39,7 +39,9 @@ En Claude Code:
 inyectá al proyecto dev la info de hexagonal-architecture
 ```
 
-El skill `inject-atlas` lee el `.md`, parsea frontmatter, llama `mem_save` con `type=atlas`, `source_url` mandatory.
+El skill `inject-atlas` lee el `.md`, parsea frontmatter y lo inyecta a engram como `type=atlas` usando `source_url` como campo canónico.
+
+Compatibilidad: si el clip viejo del Web Clipper trae `source:` en vez de `source_url:`, Atlas lo sigue leyendo igual. `source_url` queda como nombre canónico de escritura; `source` vive solo como fallback de lectura.
 
 ### Paso 3 — Search
 

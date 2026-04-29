@@ -8,6 +8,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the 
 
 (features in develop, no concrete release yet)
 
+## [0.3.1] — 2026-04-29
+
+### Fixed
+- Atlas readers ahora documentan explícitamente el contrato `source_url ?? source` para clips legacy del Web Clipper; `source_url` sigue siendo el campo canónico de escritura.
+- `bulk-inject`, `atlas-lookup` y `atlas-cleanup` limitan el scan a clips `.md` de primer nivel en `atlas-pool/` y saltean `README.md`, así docs internas no se confunden con clips.
+
 ## [0.3.0] — 2026-04-29
 
 ### Added

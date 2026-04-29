@@ -4,7 +4,7 @@ Engram te da memoria persistente. Atlas la extiende al browser. Todo lo que clip
 
 ## ¿Qué hace atlas, exactamente?
 
-- **Web Clipper brandeado** que escribe los clips directo a tu vault de Obsidian, en una carpeta `atlas-pool/`. Markdown plano, frontmatter con `source_url`, listo para inyectar.
+- **Web Clipper brandeado** que escribe los clips directo a tu vault de Obsidian, en una carpeta `atlas-pool/`. Markdown plano: `source_url` es canónico, pero Atlas también lee `source` en clips legacy.
 - **Skills que conectan ese pool con engram**: inyectar un clip como `type=atlas`, lookup de URLs, generar índice navegable, integrity checks, edit y delete in-place.
 - **Hook automático post-search**: cada vez que Claude busca en tu engram, separa silenciosamente "tu trabajo" (decisions, bugfixes, discoveries) de "lo que clipeaste" (atlas). Ves de un vistazo qué es tuyo y qué es lectura.
 - **Catálogo `Atlas-Index.md` auto-generado** en la raíz del vault, agrupado por dominio fuente. Navegás tu atlas como navegás tu vault.

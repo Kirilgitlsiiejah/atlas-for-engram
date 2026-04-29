@@ -21,7 +21,7 @@ Busca en dos lugares y reporta los 4 escenarios posibles:
 | `pool_only`    | no                    | sí              |
 | `none`         | no                    | no              |
 
-El skill es **read-only** — nunca escribe, borra ni modifica nada.
+El skill es **read-only** — nunca escribe, borra ni modifica nada. Cuando lee clips raw, trata `source_url` como canónico y `source` como fallback compatible.
 
 > **Nota — cross-project by design**: a diferencia del resto del ecosistema atlas (que auto-detecta `project` desde el git remote / cwd), `lookup` busca en engram **sin filtro de proyecto** para responder "¿tengo esto en algún lado?" globalmente. No requiere ni acepta argumento de proyecto.
 

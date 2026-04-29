@@ -9,7 +9,7 @@ description: >-
 
 # atlas-cleanup
 
-Operación **READ-ONLY** de auditoría del ecosistema atlas. Escanea **engram** (obs `type=atlas`) cruzado con **`atlas-pool/`** (clips raw del Web Clipper) para detectar problemas de integridad. Reporta categorizado y, si el usuario lo pide, **coordina** la remediación llamando a otros skills (`atlas-delete`, `inject-atlas`, `atlas-edit`). **Nunca** ejecuta deletes o edits por sí mismo.
+Operación **READ-ONLY** de auditoría del ecosistema atlas. Escanea **engram** (obs `type=atlas`) cruzado con los clips raw de primer nivel en **`atlas-pool/`** para detectar problemas de integridad. Al leer frontmatter del pool, resuelve la URL canónica con precedencia **`source_url ?? source`**: `source_url` gana si existe; `source` queda como fallback compatible para clips viejos del Web Clipper. Reporta categorizado y, si el usuario lo pide, **coordina** la remediación llamando a otros skills (`atlas-delete`, `inject-atlas`, `atlas-edit`). **Nunca** ejecuta deletes o edits por sí mismo.
 
 Diseñado como contraparte simétrica de `atlas-index` (read-only de presentación). Mismo stack (`bash + curl + jq + rg + fd`), mismo patrón defensivo, mismas convenciones.
 
@@ -50,7 +50,7 @@ Diseñado como contraparte simétrica de `atlas-index` (read-only de presentaci�
 | Categoría | Significado | Causa típica |
 |-----------|-------------|--------------|
 | **ORPHANS** | obs `type=atlas` en engram cuyo `.md` original ya **NO existe** en `atlas-pool/` | Borraron el raw pero el inject quedó |
-| **DANGLING** | `.md` en `atlas-pool/` que **NUNCA** se inyectó a ningún proyecto | Web-clippeado y olvidado |
+| **DANGLING** | clip `.md` en `atlas-pool/` que **NUNCA** se inyectó a ningún proyecto | Web-clippeado y olvidado |
 | **DUPLICATES** | Mismo `source_url` aparece en **>1 proyecto** | Puede ser intencional (compartir conocimiento) o accidental |
 | **MALFORMED** | obs sin `source_url`, sin `title`, o con `topic_key` que no matchea `atlas/<domain>/<slug>` | Inyección manual rota o test residuals |
 

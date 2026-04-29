@@ -1,5 +1,5 @@
 #!/bin/bash
-# atlas-lookup — search engram + atlas-pool/ for a URL or substring.
+# atlas-lookup — search engram + atlas-pool top-level clip files for a URL or substring.
 #
 # Usage: lookup.sh '<url-or-substring>'
 #
@@ -141,6 +141,37 @@ err_json() {
   exit 0
 }
 
+extract_frontmatter_value() {
+  local file="$1"
+  local key_re="$2"
+  rg -m 1 -N "^(${key_re}):[[:space:]]*" "$file" 2>/dev/null | awk -v RS='\r?\n' '
+    {
+      sub(/^[a-zA-Z_]+:[[:space:]]*/, "")
+      sub(/[[:space:]]+$/, "")
+      if (match($0, /^".*"$/) || match($0, /^'\''.*'\''$/)) {
+        $0 = substr($0, 2, length($0)-2)
+      }
+      print
+      exit
+    }
+  '
+}
+
+resolve_frontmatter_source_url() {
+  local file="$1"
+  local source_url=""
+  local legacy_source=""
+
+  source_url=$(extract_frontmatter_value "$file" "source_url")
+  if [[ -n "$source_url" ]]; then
+    printf '%s' "$source_url"
+    return 0
+  fi
+
+  legacy_source=$(extract_frontmatter_value "$file" "source")
+  printf '%s' "$legacy_source"
+}
+
 if [[ -z "$QUERY" ]]; then
   err_json "no query provided (usage: lookup.sh '<url-or-substring>')"
 fi
@@ -193,32 +224,36 @@ else
   WARNINGS+=("engram unreachable at ${ENGRAM_HOST} — skipped engram search")
 fi
 
-# ─── 2. atlas-pool/ raw .md scan ─────────────────────────────────────────────
+# ─── 2. atlas-pool top-level clip .md scan ───────────────────────────────────
 POOL_MATCHES="[]"
 
 if [[ -d "$ATLAS_POOL" ]]; then
-  # rg -l returns paths (one per line) of files containing the query, case-insensitive.
-  # --type md restricts to markdown. --no-messages silences "no matches" noise.
-  MATCHED_FILES=$(rg -l -i --no-messages --type md -- "$QUERY" "$ATLAS_POOL" 2>/dev/null || true)
+  shopt -s nullglob
+  POOL_FILES=("${ATLAS_POOL}"/*.md)
+  shopt -u nullglob
+
+  CLIP_FILES=()
+  for file in "${POOL_FILES[@]}"; do
+    [[ ! -f "$file" ]] && continue
+    [[ "${file##*/}" == "README.md" ]] && continue
+    CLIP_FILES+=("$file")
+  done
+
+  MATCHED_FILES=""
+  if [[ ${#CLIP_FILES[@]} -gt 0 ]]; then
+    # rg -l returns paths (one per line) of files containing the query, case-insensitive.
+    # Restrict the scan to top-level clip artifacts so atlas-pool docs never masquerade as clips.
+    MATCHED_FILES=$(rg -l -i --no-messages -- "$QUERY" "${CLIP_FILES[@]}" 2>/dev/null || true)
+  fi
 
   if [[ -n "$MATCHED_FILES" ]]; then
     POOL_ENTRIES=()
     while IFS= read -r FILE; do
       [[ -z "$FILE" ]] && continue
       BASE=$(basename "$FILE")
-      # Skip the README placeholder
-      [[ "$BASE" == "README.md" ]] && continue
-
-      # Extract frontmatter value via rg --replace (no sed, alineado con conventions)
-      SOURCE_URL=$(rg -m 1 -N --no-messages '^(source_url|source):\s*' "$FILE" 2>/dev/null \
-        | rg --no-messages -o -r '$1' '^(?:source_url|source):\s*"?([^"\r\n]+?)"?\s*$' \
-        || true)
-      TITLE=$(rg -m 1 -N --no-messages '^title:\s*' "$FILE" 2>/dev/null \
-        | rg --no-messages -o -r '$1' '^title:\s*"?([^"\r\n]+?)"?\s*$' \
-        || true)
-      CLIPPED=$(rg -m 1 -N --no-messages '^(clipped|created|date):\s*' "$FILE" 2>/dev/null \
-        | rg --no-messages -o -r '$1' '^(?:clipped|created|date):\s*"?([^"\r\n]+?)"?\s*$' \
-        || true)
+      SOURCE_URL=$(resolve_frontmatter_source_url "$FILE")
+      TITLE=$(extract_frontmatter_value "$FILE" "title")
+      CLIPPED=$(extract_frontmatter_value "$FILE" "clipped|created|date")
 
       ENTRY=$(jq -nc \
         --arg path "$FILE" \

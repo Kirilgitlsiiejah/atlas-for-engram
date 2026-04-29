@@ -5,7 +5,7 @@ description: Inyecta clips ya presentes en ${ATLAS_VAULT}/atlas-pool/ a engram, 
 
 # inject-atlas
 
-Wrapper sobre `bulk-inject.sh`. Sweep paralelo de `${ATLAS_VAULT}/atlas-pool/*.md` → engram, idempotente.
+Wrapper sobre `bulk-inject.sh`. Sweep paralelo de los clips `.md` de primer nivel en `${ATLAS_VAULT}/atlas-pool/` → engram, idempotente.
 
 ## Cuándo activarse
 
@@ -30,7 +30,7 @@ Flags:
 - `--dry-run` — preview sin POST
 - `--parallelism N` (default 4, max 8)
 
-Output: single-line JSON `{success, project, vault, total, succeeded, failed, files:[...], elapsed_ms}`. Reportá al user en voseo: "Listo, inyecté N clips al proyecto X (M failed)".
+Output: single-line JSON `{success, project, vault, total, succeeded, failed, files:[...], elapsed_ms}`. Compatibilidad de lectura: si el markdown trae `source:` sin `source_url:`, el script usa igual esa URL para dominio/topic_key. Reportá al user en voseo: "Listo, inyecté N clips al proyecto X (M failed)".
 
 ## Modo legacy LLM-driven (DEPRECATED)
 

@@ -5,7 +5,7 @@ description: Captura un research one-shot — escribís contenido + metadata, el
 
 # atlas-research
 
-One-shot capture-classify: vos le pasás contenido (+ source_url, title opcional), el script lo escribe a `${ATLAS_VAULT}/atlas-pool/<slug>.md` y lo POSTea a engram con `type=atlas`. Pool-first: si engram está caído, el `.md` queda en disco — recovery via `bulk-inject.sh`.
+One-shot capture-classify: vos le pasás contenido (+ source_url, title opcional), el script lo escribe a `${ATLAS_VAULT}/atlas-pool/<slug>.md` y lo POSTea a engram con `type=atlas`. Pool-first: si engram está caído, el `.md` queda en disco — recovery via `bulk-inject.sh`. Este path sigue escribiendo `source_url` como campo canónico; el fallback `source` existe para leer markdown legacy, no para cambiar el contrato de escritura.
 
 ## Cuándo activarse
 

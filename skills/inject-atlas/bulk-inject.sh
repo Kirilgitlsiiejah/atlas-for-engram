@@ -1,6 +1,6 @@
 #!/bin/bash
-# bulk-inject — sweep ${ATLAS_VAULT}/atlas-pool/*.md and POST each to engram in
-# parallel via xargs -P. Idempotent via topic_key upsert (engram native).
+# bulk-inject — sweep atlas-pool top-level clip .md files and POST each to
+# engram in parallel via xargs -P. Idempotent via topic_key upsert (engram native).
 #
 # Usage:
 #   bulk-inject.sh --project <name> [--vault <path>] [--dry-run] [--parallelism N]
@@ -105,7 +105,8 @@ _bulk_worker() {
   fi
 
   # yq v4 frontmatter extraction. `--front-matter=extract` reads only the YAML
-  # block. If file has no frontmatter, yq prints empty/null — handle gracefully.
+  # block. Resolve URL canonically as source_url ?? source ?? "" so legacy Web
+  # Clipper notes still derive the correct domain/topic_key.
   local fm_title fm_url fm_tags
   fm_title=$(yq --front-matter=extract '.title // ""' "$file" 2>/dev/null) || fm_title=""
   fm_url=$(yq --front-matter=extract '.source_url // .source // ""' "$file" 2>/dev/null) || fm_url=""
@@ -260,10 +261,19 @@ if [[ ! -d "$POOL_DIR" ]]; then
   _bi_emit_summary_and_exit 2 "$(jq -nc --arg p "$POOL_DIR" '{success:false, error: ("atlas-pool dir missing: " + $p)}')"
 fi
 
-# ─── List .md files via bash glob ────────────────────────────────────────────
+# ─── List atlas clip candidates (top-level only, skip README docs) ───────────
 shopt -s nullglob
 files=("${POOL_DIR}"/*.md)
 shopt -u nullglob
+
+clip_files=()
+for file in "${files[@]}"; do
+  [[ ! -f "$file" ]] && continue
+  [[ "${file##*/}" == "README.md" ]] && continue
+  clip_files+=("$file")
+done
+
+files=("${clip_files[@]}")
 
 TOTAL="${#files[@]}"
 if [[ "$TOTAL" -eq 0 ]]; then

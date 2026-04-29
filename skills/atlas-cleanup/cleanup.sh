@@ -189,24 +189,27 @@ ATLAS_OBS=$(echo "$ATLAS_OBS" | jq -c '
 
 TOTAL_OBS=$(echo "$ATLAS_OBS" | jq 'length')
 
-# 3. List all .md in atlas-pool/ (skip README.md)
+# 3. List top-level clip .md files in atlas-pool/ (skip README/docs)
 POOL_FILES=()
 if [[ -d "$ATLAS_POOL" ]]; then
-  while IFS= read -r f; do
-    [[ -z "$f" ]] && continue
-    [[ "$(basename "$f")" == "README.md" ]] && continue
+  shopt -s nullglob
+  CANDIDATES=("${ATLAS_POOL}"/*.md)
+  shopt -u nullglob
+  for f in "${CANDIDATES[@]}"; do
+    [[ ! -f "$f" ]] && continue
+    [[ "${f##*/}" == "README.md" ]] && continue
     POOL_FILES+=("$f")
-  done < <(fd -e md . "$ATLAS_POOL" 2>/dev/null || true)
+  done
 fi
 TOTAL_POOL=${#POOL_FILES[@]}
 
-# 4. Build pool_index: parse frontmatter from each .md to extract source_url
+# 4. Build pool_index: parse frontmatter from each clip .md to extract resolved URL
 #    Replaces sed -E with awk (forbidden tools include sed).
 extract_frontmatter_value() {
   # $1 = file path, $2 = key regex (e.g. "source_url|source")
   local file="$1"
   local key_re="$2"
-  rg -m 1 "^(${key_re}):" "$file" 2>/dev/null | awk -v RS='\r?\n' '
+  rg -m 1 -N "^(${key_re}):[[:space:]]*" "$file" 2>/dev/null | awk -v RS='\r?\n' '
     {
       # Strip leading "key:" then surrounding spaces and quotes.
       sub(/^[a-zA-Z_]+:[[:space:]]*/, "")
@@ -222,10 +225,25 @@ extract_frontmatter_value() {
   '
 }
 
+resolve_frontmatter_source_url() {
+  local file="$1"
+  local source_url=""
+  local legacy_source=""
+
+  source_url=$(extract_frontmatter_value "$file" "source_url")
+  if [[ -n "$source_url" ]]; then
+    printf '%s' "$source_url"
+    return 0
+  fi
+
+  legacy_source=$(extract_frontmatter_value "$file" "source")
+  printf '%s' "$legacy_source"
+}
+
 declare -A POOL_BY_URL
 declare -A POOL_BY_FILE
 for f in "${POOL_FILES[@]}"; do
-  URL=$(extract_frontmatter_value "$f" "source_url|source")
+  URL=$(resolve_frontmatter_source_url "$f")
   POOL_BY_FILE["$f"]="$URL"
   [[ -n "$URL" ]] && POOL_BY_URL["$URL"]="$f"
 done
@@ -237,13 +255,13 @@ else
   POOL_URLS_JSON="[]"
 fi
 
-# 6. Detect ORPHANS: engram obs with _source_url NOT in pool
+# 6. Detect ORPHANS: engram obs with resolved source URL NOT in pool
 #    (only counts obs that DO have _source_url — missing _source_url is malformed, not orphan)
 ORPHANS=$(echo "$ATLAS_OBS" | jq -c \
   --argjson pool_urls "$POOL_URLS_JSON" \
   '[.[] | select((._source_url // "") != "") | select(._source_url as $u | $pool_urls | index($u) | not)]')
 
-# 7. Detect DANGLING: .md in pool whose source_url is NOT in any engram obs
+# 7. Detect DANGLING: clip .md in pool whose resolved source URL is NOT in any engram obs
 ENGRAM_URL_SET=$(echo "$ATLAS_OBS" | jq -c '[.[] | ._source_url // empty | select(. != "")]')
 
 DANGLING_LIST=()

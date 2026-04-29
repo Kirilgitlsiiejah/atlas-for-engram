@@ -34,7 +34,7 @@ engram resolvió la mitad: ahora **tu propio trabajo** (decisiones, bugs, conven
 
 Atlas cierra ese hueco con tres decisiones simples:
 
-1. **`type=atlas` + `source_url` mandatory** → siempre sabés de dónde vino cada cosa.
+1. **`type=atlas` + `source_url` canónico** → siempre sabés de dónde vino cada cosa, pero Atlas sigue leyendo `source` en clips legacy del Web Clipper.
 2. **Búsqueda auto-segmentada** → cuando Claude busca algo, separa solo "lo que decidiste vos" de "lo que leíste afuera".
 3. **Dedup cross-vault** → el mismo URL clipeado dos veces no se duplica.
 
@@ -98,7 +98,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/skills/inject-atlas/bulk-inject.sh" \
   --project dev [--vault <path>] [--dry-run] [--parallelism N]
 ```
 
-Procesa todo el pool en paralelo (default 4 workers, máximo 8), idempotente vía `topic_key` upsert. No re-ejecutes en loop — engram nativo deduplica.
+Procesa los clips `.md` de primer nivel del pool en paralelo (default 4 workers, máximo 8), idempotente vía `topic_key` upsert. No re-ejecutes en loop — engram nativo deduplica.
+
+Contrato de compatibilidad: Atlas **escribe** `source_url` como campo canónico, pero al **leer** markdown del Web Clipper resuelve la URL como `source_url ?? source`. O sea: si un clip viejo trae solo `source`, igual deriva bien el dominio y el `topic_key`.
 
 Output: una línea JSON `{success, project, total, succeeded, failed, files:[...], elapsed_ms}`. Validá con `jq -e .`.
 
@@ -120,9 +122,9 @@ bash "${CLAUDE_PLUGIN_ROOT}/skills/atlas-research/research.sh" <<'EOF'
 EOF
 ```
 
-Required: `body`, `project`. Si no pasás `title`, lo deriva (primer `# H1` del body → último segmento de la URL → falla). Output JSON: `{success, wrote_pool, wrote_engram, pool_path, topic_key, obs_id, error?, retry?}`.
+Required: `body`, `project`. Si no pasás `title`, lo deriva (primer `# H1` del body → último segmento de la URL → falla). Este path AI-first sigue **escribiendo** `source_url` como canónico; la compatibilidad con `source` aplica al path de lectura desde markdown ya clipeado. Output JSON: `{success, wrote_pool, wrote_engram, pool_path, topic_key, obs_id, error?, retry?}`.
 
-Exit codes: `0` pool+engram ok / `1` pool ok pero engram fail (`.md` preservado, te dice cómo retrear) / `2` pool fail.
+Exit codes: `0` pool+engram ok / `1` pool ok pero engram fail (`.md` preservado, te dice cómo reintentar) / `2` pool fail.
 
 ### Dependencia: yq v4
 
@@ -152,7 +154,7 @@ Estas son cosas que le decís a Claude tal cual, en lenguaje natural. El plugin 
 
 > *"agregá al proyecto dev lo que clipeé sobre arquitectura hexagonal"*
 
-Claude busca el `.md` correspondiente en `atlas-pool/`, parsea el frontmatter (título, URL, tags), y lo carga en engram como `type=atlas`, asociado al proyecto que mencionaste. La próxima vez que le preguntes algo relacionado, lo encuentra y lo cita solo.
+Claude busca el `.md` correspondiente en `atlas-pool/`, parsea el frontmatter (título, URL, tags), resuelve la URL como `source_url ?? source`, y lo carga en engram como `type=atlas`, asociado al proyecto que mencionaste. La próxima vez que le preguntes algo relacionado, lo encuentra y lo cita solo.
 
 ### Preguntar si ya tenés algo clipeado
 
