@@ -1,7 +1,7 @@
 {
   "name": "atlas",
   "description": "Atlas-pool injection + retrieval skills for engram. Bridges Obsidian Web Clipper raw clips to project-scoped engram memory.",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "author": { "name": "Kirilgitlsiiejah" },
   "homepage": "https://github.com/Kirilgitlsiiejah/atlas-for-engram",
   "repository": "https://github.com/Kirilgitlsiiejah/atlas-for-engram",

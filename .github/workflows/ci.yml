@@ -16,19 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json opencode/opencode.json opencode/manifest.json; do
             jq -e . "$f" >/dev/null
           done
   bash-syntax:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: find scripts skills -name '*.sh' -print0 | xargs -0 -n1 bash -n
+      - run: git ls-files '*.sh' | xargs -r -n1 bash -n
   version-sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
-          v_file=$(cat VERSION)
-          v_json=$(jq -r .version .claude-plugin/plugin.json)
-          [[ "$v_file" == "$v_json" ]] || { echo "VERSION ($v_file) != plugin.json ($v_json)"; exit 1; }
+          v_file=$(< VERSION)
+          v_claude=$(jq -r .version .claude-plugin/plugin.json)
+          v_market=$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)
+          v_open=$(jq -r .version opencode/manifest.json)
+          [[ "$v_file" == "$v_claude" ]] || { printf '%s\n' "VERSION ($v_file) != plugin.json ($v_claude)"; exit 1; }
+          [[ "$v_file" == "$v_market" ]] || { printf '%s\n' "VERSION ($v_file) != marketplace.json ($v_market)"; exit 1; }
+          [[ "$v_file" == "$v_open" ]] || { printf '%s\n' "VERSION ($v_file) != opencode/manifest.json ($v_open)"; exit 1; }

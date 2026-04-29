@@ -8,6 +8,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the 
 
 (features in develop, no concrete release yet)
 
+## [0.4.0] — 2026-04-29
+
+### Added
+- Adapter OpenCode para usar Atlas con stack GPT/OpenCode reutilizando el mismo core Bash que Claude Code.
+- `ATLAS_PLUGIN_ROOT` como root canónico del plugin, con fallback compatible a `CLAUDE_PLUGIN_ROOT` para instalaciones Claude existentes.
+- Artefactos OpenCode bajo `opencode/`: config, manifest, prompt primario y wrappers `SKILL.md` para inject, lookup, cleanup, research, edit, delete e index.
+- Smoke manual `tests/manual-opencode-adapter-smoke.md` para validar root resolution, inject dry-run, lookup, cleanup y compatibilidad Claude.
+
+### Changed
+- CI valida JSON/version sync también para `opencode/manifest.json`.
+- Docs explican instalación/uso de Atlas en OpenCode, incluyendo preflight Windows/WSL para CRLF y `jq` visible desde Bash.
+
 ## [0.3.1] — 2026-04-29
 
 ### Fixed

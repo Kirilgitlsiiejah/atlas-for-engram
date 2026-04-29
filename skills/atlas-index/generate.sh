@@ -49,7 +49,9 @@ done
 set -- "${ARGS[@]}"
 
 # Source shared helpers (defensive — fallback inline if missing)
-ATLAS_HELPERS="${CLAUDE_PLUGIN_ROOT:-${BASH_SOURCE%/*}/../..}/scripts/_helpers.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)" || SCRIPT_DIR="."
+ATLAS_ROOT="${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-${SCRIPT_DIR}/../..}}"
+ATLAS_HELPERS="${ATLAS_ROOT}/scripts/_helpers.sh"
 if [[ -f "$ATLAS_HELPERS" ]]; then
   source "$ATLAS_HELPERS"
 else

@@ -76,6 +76,7 @@
 - **Voseo rioplatense** en TODO doc user-facing (README, SKILL.md, CONTRIBUTING)
 - Inglés técnico OK en code comments
 - Cross-references con paths absolutos o `<repo-root>/relative/path`
+- `ATLAS_PLUGIN_ROOT` es la env var canónica del root del adapter/plugin; `CLAUDE_PLUGIN_ROOT` queda solo como fallback de compatibilidad.
 
 ## Conventional Commits
 
@@ -114,21 +115,27 @@ Documentá cada fase como markdown en el PR description (o como observations en 
 
 ## Antes del PR
 
+### Preflight Windows/WSL para Bash smoke
+
+- Si validás con WSL sobre un checkout con CRLF, `bash -n` puede fallar con falsos negativos (`$'\r'`). Para ese caso usá Git for Windows Bash o corré el check sobre contenido normalizado a LF.
+- Los comandos smoke del adapter OpenCode invocan `jq` desde Bash. Que `jq.exe` exista en PowerShell no garantiza nada: `jq` tiene que quedar visible en el `PATH` de WSL/Git Bash.
+
 - [ ] `bash -n` clean en todos los `.sh` modificados
 - [ ] `rg "shellcheck source=/dev/null"` en `.sh` files retorna 0 hits
 - [ ] CI verde local si tenés shellcheck (`shellcheck --rcfile=.shellcheckrc <files>`)
 - [ ] Commit messages conventional, sin AI attribution
 - [ ] Inline fallbacks (si tocaste consumer scripts) byte-idénticos via sha1sum
 - [ ] Voseo en docs user-facing tocadas
+- [ ] Si tocaste el adapter OpenCode, corré `tests/manual-opencode-adapter-smoke.md`
 
 ## CI
 
 GitHub Actions corre 4 jobs en cada push/PR a `main`:
 
 - **shellcheck**: `ludeeus/action-shellcheck` SHA-pinned, severity warning, config en `.shellcheckrc`
-- **validate-json**: `jq -e .` sobre `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `hooks/hooks.json`
+- **validate-json**: `jq -e .` sobre `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `hooks/hooks.json`, `opencode/opencode.json`, `opencode/manifest.json`
 - **bash-syntax**: `bash -n` sobre todos los `.sh` en `scripts/` y `skills/`
-- **version-sync**: `VERSION` ↔ `.claude-plugin/plugin.json#version`
+- **version-sync**: `VERSION` ↔ `.claude-plugin/plugin.json#version` ↔ `.claude-plugin/marketplace.json#plugins[0].version` ↔ `opencode/manifest.json#version`
 
 Si CI falla en `main`, el workflow `ci-alerts.yml` auto-crea issue con label `ci-failure`. NO se auto-cierra al fixearse — cerrala manual como audit trail.
 

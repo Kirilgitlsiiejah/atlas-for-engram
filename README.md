@@ -58,7 +58,7 @@ Es el daemon de memoria persistente — sin él, Atlas no tiene dónde guardar n
 
 ### 4. El plugin atlas-for-engram
 
-> _Por ahora, atlas-for-engram corre solo en Claude Code CLI — todavía no hay soporte para Claude Desktop ni la web._
+> _atlas-for-engram hoy tiene dos superficies soportadas: plugin de Claude Code CLI y adapter de OpenCode/GPT. Claude Desktop y la web siguen afuera del scope._
 
 Una sola vez al principio, registrás el marketplace y después instalás el plugin. Son dos comandos encadenados con `&&` para que vaya todo de una:
 
@@ -66,7 +66,7 @@ Una sola vez al principio, registrás el marketplace y después instalás el plu
 /plugin marketplace add github:Kirilgitlsiiejah/atlas-for-engram && /plugin install atlas@atlas-for-engram
 ```
 
-De ahí en más, **no lo invocás directo** — vive embebido en cada conversación con Claude. Skills, hooks y scripts se resuelven solos desde `${CLAUDE_PLUGIN_ROOT}`. Cero copies manuales, cero edits a `settings.json`.
+De ahí en más, **no lo invocás directo** — vive embebido en cada conversación con Claude. El root canónico ahora es `${ATLAS_PLUGIN_ROOT}`; si venís de un install legacy de Claude, `${CLAUDE_PLUGIN_ROOT}` sigue andando como fallback compatible. Cero copies manuales, cero edits a `settings.json`.
 
 #### Actualizar el plugin
 
@@ -94,7 +94,7 @@ Atlas tiene dos paths para meter conocimiento a engram, dependiendo de dónde es
 Cuando ya tenés un montón de `.md` clipeados en `${ATLAS_VAULT}/atlas-pool/` y querés sincronizarlos todos al engram de un proyecto:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/inject-atlas/bulk-inject.sh" \
+bash "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/inject-atlas/bulk-inject.sh" \
   --project dev [--vault <path>] [--dry-run] [--parallelism N]
 ```
 
@@ -111,7 +111,7 @@ Exit codes: `0` todo ok / `1` algunos fallaron / `2` preflight (engram unreachab
 Cuando estás investigando algo y querés capturar+inyectar de una sola pasada — el script escribe el `.md` al pool **antes** de POSTear a engram, así que si engram cae, el `.md` queda en disco para recovery:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/atlas-research/research.sh" <<'EOF'
+bash "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-research/research.sh" <<'EOF'
 {
   "title": "RNN Effectiveness",
   "source_url": "https://karpathy.github.io/2015/05/21/rnn-effectiveness/",
@@ -207,7 +207,36 @@ Browser Web Clipper
    Browse / retrieve desde Obsidian o Claude Code
 ```
 
-El plugin vive bajo `${CLAUDE_PLUGIN_ROOT}` post-install: hooks, scripts (`_helpers.sh`, `_doctor.sh`, `session-start.sh`) y los 7 skills bajo `skills/`.
+El core vive bajo `${ATLAS_PLUGIN_ROOT}` cuando lo seteás explícitamente. Si no, Atlas cae a `${CLAUDE_PLUGIN_ROOT}` para installs legacy. Ahí viven hooks, scripts (`_helpers.sh`, `_doctor.sh`, `session-start.sh`) y los 7 skills Bash bajo `skills/`.
+
+## OpenCode / GPT adapter
+
+Si querés usar el mismo core Bash desde OpenCode, no forks nada: apuntás OpenCode al adapter repo-local y listo.
+
+```bash
+export ATLAS_PLUGIN_ROOT="/path/to/atlas-for-engram"
+export OPENCODE_CONFIG="${ATLAS_PLUGIN_ROOT}/opencode/opencode.json"
+export OPENCODE_CONFIG_DIR="${ATLAS_PLUGIN_ROOT}/opencode"
+```
+
+Preflight local en Windows/WSL:
+
+- Si corrés validaciones Bash desde WSL sobre un working tree con CRLF, `bash -n` te puede tirar falsos negativos con `$'\r'`. Para validar localmente usá Git for Windows Bash o normalizá a LF ese contenido antes del check.
+- Los smokes usan `jq` desde Bash. Tener `jq.exe` visible sólo en PowerShell NO alcanza si después corrés los comandos desde WSL/Git Bash: `jq` tiene que estar en el `PATH` de esa shell también.
+
+Qué trae ese adapter:
+
+- `opencode/opencode.json` — config base del agente Atlas para OpenCode.
+- `opencode/prompts/atlas-primary.md` — prompt corto para enrutar a los wrappers correctos.
+- `opencode/skills/*/SKILL.md` — wrappers OpenCode que shell-out al mismo core Bash de `skills/`.
+- `opencode/manifest.json` — metadata del adapter, versionada igual que `VERSION` y `.claude-plugin/*`.
+
+Tradeoffs del MVP:
+
+- `inject`, `lookup`, `research`, `edit`, `delete`, `index` y `cleanup` usan el mismo core Bash.
+- La paridad de hooks automáticos tipo Claude `PostToolUse` NO está resuelta en OpenCode todavía.
+- `cleanup` en OpenCode queda como scan/read-only documentado; la remediación sigue siendo manual o coordinada por otros skills.
+- No hay build step: todo se valida con `jq`, checks de versiones y `bash -n`.
 
 **Project resolution**: mismo algoritmo que engram core — git remote → git root basename → cwd basename → fallback `dev`.
 

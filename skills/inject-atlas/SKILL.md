@@ -20,7 +20,7 @@ Si el usuario no especifica proyecto, auto-detect via `git remote` → `git root
 ## Cómo invocar
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/inject-atlas/bulk-inject.sh" \
+bash "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/inject-atlas/bulk-inject.sh" \
   --project <name> [--vault <path>] [--dry-run] [--parallelism N]
 ```
 

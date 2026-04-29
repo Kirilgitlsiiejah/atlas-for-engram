@@ -102,7 +102,7 @@ Si el usuario dice no, salir limpio.
 
 Invocar el script:
 ```bash
-bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-edit/edit.sh' <obs_id> <project> <field=value> [<field=value> ...]
+bash '${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-edit/edit.sh' <obs_id> <project> <field=value> [<field=value> ...]
 ```
 
 Campos soportados (alineados con engram `UpdateObservationParams`):
@@ -121,7 +121,7 @@ El script construye el JSON body con `jq` y hace `PATCH /observations/<id>`. Si 
 
 Después del PATCH exitoso:
 ```bash
-bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-index/generate.sh' <project>
+bash '${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-index/generate.sh' <project>
 ```
 
 - Si falla: warning no-bloqueante (`⚠️ Index regeneration failed. Run manually.`).

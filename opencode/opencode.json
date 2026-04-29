@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "atlas": {
+      "description": "Atlas adapter for engram-backed clip injection and retrieval",
+      "mode": "primary",
+      "prompt": "{file:./prompts/atlas-primary.md}",
+      "tools": {
+        "bash": true,
+        "read": true
+      }
+    }
+  },
+  "adapter": {
+    "name": "atlas-for-engram",
+    "root_env": "ATLAS_PLUGIN_ROOT",
+    "compat_env": "CLAUDE_PLUGIN_ROOT",
+    "skills_dir": "./skills",
+    "manifest": "./manifest.json"
+  }
+}

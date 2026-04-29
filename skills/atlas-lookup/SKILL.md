@@ -51,7 +51,7 @@ Si no detectás URL ni keyword en el mensaje, **PREGUNTAR**: "Dale, ¿qué URL o
 ### 2. Invocar el script
 
 ```bash
-bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-lookup/lookup.sh' '<url-o-substring>'
+bash '${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-lookup/lookup.sh' '<url-o-substring>'
 ```
 
 El script devuelve un JSON con esta forma:

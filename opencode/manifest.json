@@ -1,0 +1,21 @@
+{
+  "name": "atlas-for-engram-opencode",
+  "display_name": "Atlas for Engram (OpenCode)",
+  "description": "OpenCode adapter for atlas-for-engram using the shared Bash core.",
+  "version": "0.4.0",
+  "adapter": "opencode",
+  "repository": "https://github.com/Kirilgitlsiiejah/atlas-for-engram",
+  "homepage": "https://github.com/Kirilgitlsiiejah/atlas-for-engram",
+  "license": "MIT",
+  "root_env": "ATLAS_PLUGIN_ROOT",
+  "compat_env": "CLAUDE_PLUGIN_ROOT",
+  "skills": [
+    "inject-atlas",
+    "atlas-research",
+    "atlas-lookup",
+    "atlas-edit",
+    "atlas-delete",
+    "atlas-index",
+    "atlas-cleanup"
+  ]
+}

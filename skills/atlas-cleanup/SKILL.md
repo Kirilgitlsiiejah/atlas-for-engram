@@ -70,7 +70,7 @@ Triggers típicos:
 ### 1. Invocar el script de scan
 
 ```bash
-bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-cleanup/cleanup.sh' --scan
+bash '${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-cleanup/cleanup.sh' --scan
 ```
 
 El script **SOLO escanea**, NO modifica nada. Devuelve por stdout un JSON con esta forma:

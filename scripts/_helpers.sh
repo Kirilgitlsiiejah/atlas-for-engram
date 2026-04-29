@@ -53,6 +53,40 @@ resolve_project() {
   fi
 }
 
+# resolve_plugin_root — canonical plugin root resolver for all adapters.
+# Orden:
+#   1. $ATLAS_PLUGIN_ROOT   (canónico, neutral a Claude/OpenCode)
+#   2. $CLAUDE_PLUGIN_ROOT  (compatibilidad con installs legacy de Claude)
+#   3. relativo al script caller (si se pasa $1)
+#   4. relativo a este helper como fallback final
+# Output: path al root del repo/plugin, sin newline trailing.
+resolve_plugin_root() {
+  local caller_path="${1:-}"
+  local fallback_root=""
+
+  if [[ -n "${ATLAS_PLUGIN_ROOT:-}" ]]; then
+    fallback_root="$ATLAS_PLUGIN_ROOT"
+  elif [[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
+    fallback_root="$CLAUDE_PLUGIN_ROOT"
+  elif [[ -n "$caller_path" ]]; then
+    local caller_dir=""
+    caller_dir=$(cd "$(dirname "$caller_path")" && pwd 2>/dev/null) || caller_dir=""
+    if [[ -n "$caller_dir" ]]; then
+      fallback_root=$(cd "$caller_dir/../.." && pwd 2>/dev/null) || fallback_root="$caller_dir/../.."
+    fi
+  fi
+
+  if [[ -z "$fallback_root" ]]; then
+    local helper_dir=""
+    helper_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null) || helper_dir=""
+    if [[ -n "$helper_dir" ]]; then
+      fallback_root=$(cd "$helper_dir/.." && pwd 2>/dev/null) || fallback_root="$helper_dir/.."
+    fi
+  fi
+
+  printf '%s' "$fallback_root"
+}
+
 # ─── Vault resolution (REQ-CASCADE-1/2, REQ-WIN-1/2/3, REQ-MARKER-1, REQ-DEPR-1) ──
 
 # _atlas_normalize_path — convierte rutas Windows a forma Unix-style (Git Bash / MSYS2).

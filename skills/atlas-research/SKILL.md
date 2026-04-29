@@ -20,7 +20,7 @@ Activate ante triggers como:
 `research.sh` lee JSON por stdin. Pipeá un heredoc:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/atlas-research/research.sh" <<'EOF'
+bash "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-research/research.sh" <<'EOF'
 {
   "title": "RNN Effectiveness",
   "source_url": "https://karpathy.github.io/2015/05/21/rnn-effectiveness/",

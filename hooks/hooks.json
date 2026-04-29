@@ -5,14 +5,14 @@
       "matcher": "mcp__plugin_engram_engram__mem_search",
       "hooks": [{
         "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/skills/compare-with-atlas/hook.sh"
+        "command": "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/compare-with-atlas/hook.sh"
       }]
     }],
     "SessionStart": [{
       "matcher": "startup|clear",
       "hooks": [{
         "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh",
+        "command": "${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/session-start.sh",
         "timeout": 3,
         "statusMessage": "atlas: checking environment..."
       }]

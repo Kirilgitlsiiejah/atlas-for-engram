@@ -55,7 +55,7 @@ Si no se menciona ninguno, usar `dev` por default.
 ### 2. Invocar el script
 
 ```bash
-bash '${CLAUDE_PLUGIN_ROOT}/skills/atlas-index/generate.sh' <project>
+bash '${ATLAS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/skills/atlas-index/generate.sh' <project>
 ```
 
 El script:
