@@ -85,6 +85,12 @@ fi
 # Compares sha1 of the inline detect_vault() function body across the 4 consumer
 # scripts.  Opportunistic: skips silently on any extraction or hashing failure
 # so SessionStart is NEVER blocked.
+#
+# TODO (next minor): extend this drift check to also cover the inline
+# engram_post_observation() block (markers `# === BEGIN/END INLINE FALLBACK
+# engram_post_observation ===`) inside skills/inject-atlas/bulk-inject.sh
+# and skills/atlas-research/research.sh — both must hash equal to canonical
+# in scripts/_helpers.sh after stripping their 2-space if/else indent.
 _doctor_check_drift() {
   local sha_cmd=""
   if command -v sha1sum >/dev/null 2>&1; then

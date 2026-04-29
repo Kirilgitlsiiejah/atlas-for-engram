@@ -80,6 +80,62 @@ El re-install pulla la versión refrescada en caliente, así que no hace falta r
 
 ---
 
+## AI-first usage
+
+Atlas tiene dos paths para meter conocimiento a engram, dependiendo de dónde está hoy ese conocimiento:
+
+```
+¿Los clips ya están en atlas-pool/?  ──►  bulk-inject.sh   (sweep paralelo)
+¿Estás investigando algo nuevo?      ──►  atlas-research   (capture+inject one-shot)
+```
+
+### bulk-inject (multi-archivo, ya en pool)
+
+Cuando ya tenés un montón de `.md` clipeados en `${ATLAS_VAULT}/atlas-pool/` y querés sincronizarlos todos al engram de un proyecto:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/inject-atlas/bulk-inject.sh" \
+  --project dev [--vault <path>] [--dry-run] [--parallelism N]
+```
+
+Procesa todo el pool en paralelo (default 4 workers, máximo 8), idempotente vía `topic_key` upsert. No re-ejecutes en loop — engram nativo deduplica.
+
+Output: una línea JSON `{success, project, total, succeeded, failed, files:[...], elapsed_ms}`. Validá con `jq -e .`.
+
+Exit codes: `0` todo ok / `1` algunos fallaron / `2` preflight (engram unreachable, vault inválido, flag malformado).
+
+### atlas-research (one-shot, contenido nuevo)
+
+Cuando estás investigando algo y querés capturar+inyectar de una sola pasada — el script escribe el `.md` al pool **antes** de POSTear a engram, así que si engram cae, el `.md` queda en disco para recovery:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/atlas-research/research.sh" <<'EOF'
+{
+  "title": "RNN Effectiveness",
+  "source_url": "https://karpathy.github.io/2015/05/21/rnn-effectiveness/",
+  "tags": ["rnn"],
+  "body": "# RNN Effectiveness\n\n...",
+  "project": "dev"
+}
+EOF
+```
+
+Required: `body`, `project`. Si no pasás `title`, lo deriva (primer `# H1` del body → último segmento de la URL → falla). Output JSON: `{success, wrote_pool, wrote_engram, pool_path, topic_key, obs_id, error?, retry?}`.
+
+Exit codes: `0` pool+engram ok / `1` pool ok pero engram fail (`.md` preservado, te dice cómo retrear) / `2` pool fail.
+
+### Dependencia: yq v4
+
+Ambos paths usan `yq` v4 para parse/render YAML frontmatter. Instalalo:
+
+- macOS: `brew install yq`
+- Debian/Ubuntu: `apt install yq`
+- Windows: `choco install yq`
+
+El SessionStart doctor te avisa si falta.
+
+---
+
 ## ¿Y después?
 
 Después, **no hay comandos**. Todo es conversación natural con Claude.
