@@ -8,6 +8,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the 
 
 (features in develop, no concrete release yet)
 
+## [0.3.0] — 2026-04-29
+
+### Added
+- `skills/atlas-research/` — AI-first ingestion path. Claude investiga (web/research), pasa stdin JSON `{content, source_url, project, tags?}`, el skill escribe `.md` al `atlas-pool/` Y lo inyecta a engram en una sola invocación. Pool-first write order (si engram falla, el `.md` queda preservado).
+- `skills/inject-atlas/bulk-inject.sh` — script paralelo que sweep `atlas-pool/*.md` a engram via `xargs -P 4`. ~640x más rápido que el SKILL.md prompt-only que reemplaza (4 .md baja de ~15 min a ~1.4s).
+- `scripts/_helpers.sh::engram_post_observation()` — primitivo único de write a engram con retry-on-5xx (3 intentos, 0.3/0.5/0.7s linear backoff) para mitigar SQLite WAL contention bajo concurrent writes.
+- `scripts/_doctor.sh::_doctor_check_yq()` — verifica `yq` v4 presente; warning con OS-specific install hint cuando missing.
+- README "AI-first usage" section documentando los dos paths.
+
+### Changed
+- `skills/inject-atlas/SKILL.md` simplificado de 304 → 43 líneas. Ahora es un thin wrapper que delega a `bulk-inject.sh`. Triggers preservados ("inyectá al proyecto X", "agregá a engram", "inject Y to project X", "metele al engram").
+
+### Deprecated
+- Inline LLM-driven procedure en `skills/inject-atlas/SKILL.md` queda DEPRECATED. Será removido en próxima minor.
+
+### Dependencies
+- NEW: `yq` v4 (YAML frontmatter parsing). Doctor warns con install hint si missing. Atlas no auto-instala.
+
+### Discoveries
+- Engram `POST /observations` requiere `session_id` explícito (no auto-create). Bulk-inject y research mintean sesión via `POST /sessions` preamble.
+- Engram retorna 500 SQLite 517 lock bajo concurrent writes incluso con distinct topic_keys. Mitigación cliente-side via retry-on-5xx. Upstream fix recomendado: bump `busy_timeout` o serialize upsert path.
+
 ## [0.2.0] - 2026-04-25
 
 Major hardening release tras 4 SDD cycles + 2 rondas de adversarial judgment-day.
@@ -89,7 +111,8 @@ Initial public release. Atlas plugin para Claude Code, companion al engram MCP s
 - `${CLAUDE_PLUGIN_ROOT}` paths en SKILL.md (commit `078b513`)
 - README + 7 SKILL.md + plugin.json + marketplace.json + hooks.json + VERSION
 
-[Unreleased]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Kirilgitlsiiejah/atlas-for-engram/compare/v0.1.2...v0.1.3
