@@ -258,3 +258,32 @@ detect_vault() {
 
   printf '%s' "$resolved"
 }
+
+# ─── engram_post_observation — canonical write primitive ─────────────────────
+# Args:    $1 = payload_json (already-built JSON string)
+# Stdout:  obs_id on success, empty on failure
+# Exit:    0 success, 1 failure
+# Notes:   POST /observations REQUIRES session_id, title, content (caller mints
+#          session via POST /sessions BEFORE invoking — discovered P0.4 smoke).
+# === BEGIN INLINE FALLBACK engram_post_observation ===
+engram_post_observation() {
+  local payload="${1:-}" host="${ENGRAM_HOST:-127.0.0.1:7437}" attempt=0 max=3
+  [[ -z "$payload" ]] && return 1
+  while [[ $attempt -lt $max ]]; do
+    local raw http body
+    raw=$(curl -sS -m 10 -w '\n%{http_code}' -X POST \
+      -H 'Content-Type: application/json' -d "$payload" \
+      "http://${host}/observations" 2>/dev/null) || { attempt=$((attempt+1)); sleep 0.2; continue; }
+    http="${raw##*$'\n'}"; body="${raw%$'\n'*}"
+    if [[ "$http" == "200" || "$http" == "201" ]]; then
+      local obs_id
+      obs_id=$(printf '%s' "$body" | jq -r '.id // empty' 2>/dev/null)
+      [[ -n "$obs_id" && "$obs_id" != "null" ]] && { printf '%s' "$obs_id"; return 0; }
+      return 1
+    fi
+    [[ "$http" =~ ^5 ]] || return 1
+    attempt=$((attempt+1)); sleep "0.$((1+attempt*2))"
+  done
+  return 1
+}
+# === END INLINE FALLBACK engram_post_observation ===

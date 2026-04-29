@@ -16,6 +16,22 @@ MISSING=()
 for cmd in jq curl rg fd; do command -v "$cmd" >/dev/null 2>&1 || MISSING+=("$cmd"); done
 [[ ${#MISSING[@]} -gt 0 ]] && WARNINGS+=("missing commands: ${MISSING[*]}")
 
+# yq dependency: bulk-inject.sh + atlas-research/research.sh require v4 syntax.
+# Detect presence + v4 major. Missing/old → WARNINGS. NEVER exit non-zero (hooks contract).
+_doctor_check_yq() {
+  if ! command -v yq >/dev/null 2>&1; then
+    WARNINGS+=("yq missing — install via brew install yq (macOS) | apt install yq (Debian) | choco install yq (Windows)")
+    return 0
+  fi
+  local ver
+  ver=$(yq --version 2>/dev/null || true)
+  if [[ ! "$ver" =~ version[[:space:]]v?4\. ]]; then
+    WARNINGS+=("yq v4 required (found: ${ver:-unknown}) — bulk-inject + atlas-research need v4 syntax")
+  fi
+  return 0
+}
+_doctor_check_yq 2>/dev/null || true
+
 # Resolve the vault via the 5-level cascade and report which level fired.
 # Levels:
 #   1 = --vault flag (n/a here — doctor takes no flags)
@@ -69,6 +85,12 @@ fi
 # Compares sha1 of the inline detect_vault() function body across the 4 consumer
 # scripts.  Opportunistic: skips silently on any extraction or hashing failure
 # so SessionStart is NEVER blocked.
+#
+# TODO (next minor): extend this drift check to also cover the inline
+# engram_post_observation() block (markers `# === BEGIN/END INLINE FALLBACK
+# engram_post_observation ===`) inside skills/inject-atlas/bulk-inject.sh
+# and skills/atlas-research/research.sh — both must hash equal to canonical
+# in scripts/_helpers.sh after stripping their 2-space if/else indent.
 _doctor_check_drift() {
   local sha_cmd=""
   if command -v sha1sum >/dev/null 2>&1; then
